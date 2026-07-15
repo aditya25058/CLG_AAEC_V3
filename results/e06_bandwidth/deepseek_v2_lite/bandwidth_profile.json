@@ -1,0 +1,134 @@
+{
+    "miss_16": {
+        "transfer_kb": 1152.0,
+        "t_pcie_us": 18.432,
+        "t_nvlink_us": 2.6214399999999998,
+        "overlap_pcie": {
+            "50.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "100.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "150.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            }
+        },
+        "overlap_nvlink": {
+            "50.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "100.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "150.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            }
+        }
+    },
+    "miss_32": {
+        "transfer_kb": 2304.0,
+        "t_pcie_us": 36.864,
+        "t_nvlink_us": 5.2428799999999995,
+        "overlap_pcie": {
+            "50.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "100.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "150.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            }
+        },
+        "overlap_nvlink": {
+            "50.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "100.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "150.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            }
+        }
+    },
+    "miss_64": {
+        "transfer_kb": 4608.0,
+        "t_pcie_us": 73.728,
+        "t_nvlink_us": 10.485759999999999,
+        "overlap_pcie": {
+            "50.0": {
+                "hiding_ratio": 0.6781684027777778,
+                "stall_us": 23.727999999999994
+            },
+            "100.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "150.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            }
+        },
+        "overlap_nvlink": {
+            "50.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "100.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "150.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            }
+        }
+    },
+    "miss_128": {
+        "transfer_kb": 9216.0,
+        "t_pcie_us": 147.456,
+        "t_nvlink_us": 20.971519999999998,
+        "overlap_pcie": {
+            "50.0": {
+                "hiding_ratio": 0.3390842013888889,
+                "stall_us": 97.45599999999999
+            },
+            "100.0": {
+                "hiding_ratio": 0.6781684027777778,
+                "stall_us": 47.45599999999999
+            },
+            "150.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            }
+        },
+        "overlap_nvlink": {
+            "50.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "100.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            },
+            "150.0": {
+                "hiding_ratio": 1.0,
+                "stall_us": 0.0
+            }
+        }
+    }
+}

@@ -1,0 +1,116 @@
+{
+    "demand": {
+        "16": {
+            "network_gb": 204.002033664,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 34.12198786075186,
+            "throughput": 1.083665861700442
+        },
+        "32": {
+            "network_gb": 204.002033664,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 34.12198786075186,
+            "throughput": 1.083665861700442
+        },
+        "64": {
+            "network_gb": 204.002033664,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 34.12198786075186,
+            "throughput": 1.083665861700442
+        },
+        "128": {
+            "network_gb": 204.002033664,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 34.12198786075186,
+            "throughput": 1.083665861700442
+        },
+        "256": {
+            "network_gb": 204.002033664,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 34.12198786075186,
+            "throughput": 1.083665861700442
+        },
+        "512": {
+            "network_gb": 204.002033664,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 34.12198786075186,
+            "throughput": 1.083665861700442
+        }
+    },
+    "expert_cache": {
+        "16": {
+            "network_gb": 37.907595264,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 6.357526898293721,
+            "throughput": 5.775231692960157
+        },
+        "32": {
+            "network_gb": 37.907595264,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 6.357526898293721,
+            "throughput": 5.775231692960157
+        },
+        "64": {
+            "network_gb": 37.907595264,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 6.357526898293721,
+            "throughput": 5.775231692960157
+        },
+        "128": {
+            "network_gb": 37.907595264,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 6.357526898293721,
+            "throughput": 5.775231692960157
+        },
+        "256": {
+            "network_gb": 37.907595264,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 6.357526898293721,
+            "throughput": 5.775231692960157
+        },
+        "512": {
+            "network_gb": 37.907595264,
+            "avg_fetch_kb": 16896.0,
+            "avg_stall_ms": 6.357526898293721,
+            "throughput": 5.775231692960157
+        }
+    },
+    "aaec_column_cache": {
+        "16": {
+            "network_gb": 10.865664,
+            "avg_fetch_kb": 899.9236705962174,
+            "avg_stall_ms": 1.0418359208191224,
+            "throughput": 33.75006807907047
+        },
+        "32": {
+            "network_gb": 10.863845376,
+            "avg_fetch_kb": 899.77304723942,
+            "avg_stall_ms": 1.0418359208191224,
+            "throughput": 33.75006807907047
+        },
+        "64": {
+            "network_gb": 10.863845376,
+            "avg_fetch_kb": 899.77304723942,
+            "avg_stall_ms": 1.0418359208191224,
+            "throughput": 33.75006807907047
+        },
+        "128": {
+            "network_gb": 10.863845376,
+            "avg_fetch_kb": 899.77304723942,
+            "avg_stall_ms": 1.0418359208191224,
+            "throughput": 33.75006807907047
+        },
+        "256": {
+            "network_gb": 10.863845376,
+            "avg_fetch_kb": 899.77304723942,
+            "avg_stall_ms": 1.0418359208191224,
+            "throughput": 33.75006807907047
+        },
+        "512": {
+            "network_gb": 10.863845376,
+            "avg_fetch_kb": 899.77304723942,
+            "avg_stall_ms": 1.0418359208191224,
+            "throughput": 33.75006807907047
+        }
+    }
+}

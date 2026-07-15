@@ -1,0 +1,9 @@
+{
+    "network_gb": 9.741398016,
+    "avg_compute_ms": 2.115671427774246,
+    "avg_comm_ms": 59.07253667567269,
+    "avg_step_ms": 221.31003830274219,
+    "avg_hidden_ms": 0.0,
+    "hiding_ratio": 0.0,
+    "throughput_tps": 4.518547860138386
+}

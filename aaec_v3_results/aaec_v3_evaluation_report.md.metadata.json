@@ -1,0 +1,5 @@
+{
+  "summary": "Updated evaluation report including detailed clarifications of E14 simulation assumptions (flat network matrix), the mathematical relationship between TPS and network stall, and the Prefetch Success Rate (22.5% for Qwen, 10.9% for DeepSeek). Embedded figures Fig 12 and Fig 13 are included.",
+  "updatedAt": "2026-07-14T13:20:20.666133329Z",
+  "userFacing": true
+}

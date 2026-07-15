@@ -1,0 +1,6 @@
+{
+  "summary": "A comprehensive, OSDI/SOSP/MLSys-grade evaluation plan for AAEC, structured into 6 evaluation dimensions: End-to-End Serving Benchmarks, Component Micro-Benchmarks, Ablation Studies, Scalability Studies, Accuracy Verification, and Sensitivity Analysis. Includes specific baselines (PowerInfer-2, ProMoE, AdapMoE, HOBBIT, DALI, Fate, MoE-Infinity, vLLM), hardware configurations, workloads, and the exact metrics and tables to produce.",
+  "updatedAt": "2026-07-10T21:55:20.420638383Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

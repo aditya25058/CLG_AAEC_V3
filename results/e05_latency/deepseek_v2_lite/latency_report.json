@@ -1,0 +1,13 @@
+{
+    "model_name": "deepseek_v2_lite",
+    "method": "dual_stream_cuda_event_timing",
+    "iterations": 500,
+    "hbm_only_latency_ms": 0.0304,
+    "full_sa_ffn_with_pcie_ms": 0.1196,
+    "sa_ffn_no_pcie_ms": 0.0659,
+    "raw_pcie_transfer_ms": 0.0405,
+    "exposed_pcie_stall_ms": 0.0537,
+    "pcie_overlap_ratio": -0.3274,
+    "miss_columns": 32,
+    "transfer_size_bytes": 393216
+}

@@ -1,0 +1,17 @@
+{
+    "full": {
+        "hit_rate": 0.5835858541091147,
+        "avg_stall_ms": 1.28296494949495,
+        "total_transferred_gb": 17.713152
+    },
+    "no_prefetcher": {
+        "hit_rate": 0.5835858541091147,
+        "avg_stall_ms": 1.28296494949495,
+        "total_transferred_gb": 13.95069952
+    },
+    "no_column_level": {
+        "hit_rate": 0.9339225589225589,
+        "avg_stall_ms": 2.9609248484849227,
+        "total_transferred_gb": 52.66735104
+    }
+}

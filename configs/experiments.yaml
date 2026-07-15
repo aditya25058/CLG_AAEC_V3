@@ -1,0 +1,8 @@
+experiments:
+  seed: 42
+  num_prompts: 100
+  generation_tokens: 128
+  quality_benchmarks:
+    - mmlu
+    - gsm8k
+    - arc

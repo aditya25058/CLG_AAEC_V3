@@ -1,0 +1,22 @@
+{
+    "no_aaec": {
+        "hit_rate": 0.9339225589225589,
+        "avg_stall_ms": 2.9609248484849227,
+        "total_transferred_gb": 14.81637888
+    },
+    "slicing_only": {
+        "hit_rate": 0.0,
+        "avg_stall_ms": 4.686027609427618,
+        "total_transferred_gb": 33.50198272
+    },
+    "slicing_lru": {
+        "hit_rate": 0.5835858541091147,
+        "avg_stall_ms": 1.28296494949495,
+        "total_transferred_gb": 13.95069952
+    },
+    "slicing_lru_prefetch": {
+        "hit_rate": 0.5835858541091147,
+        "avg_stall_ms": 1.28296494949495,
+        "total_transferred_gb": 17.713152
+    }
+}

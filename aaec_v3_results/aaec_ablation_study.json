@@ -1,0 +1,272 @@
+{
+    "1.0": {
+        "aaec": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20979998642898232,
+                "avg_stall_ms": 42.67837585858569
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29293408458900905,
+                "avg_stall_ms": 37.99392855218854
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4218190176417117,
+                "avg_stall_ms": 30.774317508417692
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5846217139950814,
+                "avg_stall_ms": 21.71163037037053
+            }
+        ],
+        "aaec_no_temp": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20979998642898232,
+                "avg_stall_ms": 42.67837585858569
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29293408458900905,
+                "avg_stall_ms": 37.99392855218854
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4218190176417117,
+                "avg_stall_ms": 30.774317508417692
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5846217139950814,
+                "avg_stall_ms": 21.71163037037053
+            }
+        ],
+        "aaec_no_gate": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20979998642898232,
+                "avg_stall_ms": 42.67837585858569
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29293408458900905,
+                "avg_stall_ms": 37.99392855218854
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4218190176417117,
+                "avg_stall_ms": 30.774317508417692
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5846217139950814,
+                "avg_stall_ms": 21.71163037037053
+            }
+        ],
+        "lru": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20907558751197397,
+                "avg_stall_ms": 42.71923242424237
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29200245256409707,
+                "avg_stall_ms": 38.04647319865317
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4208094439611722,
+                "avg_stall_ms": 30.831243333333465
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5835858541091147,
+                "avg_stall_ms": 21.769972255892405
+            }
+        ]
+    },
+    "2.0": {
+        "aaec": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20979998642898232,
+                "avg_stall_ms": 20.39706838383834
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29293408458900905,
+                "avg_stall_ms": 18.061684814814768
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4218190176417117,
+                "avg_stall_ms": 14.496725286195362
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5846217139950814,
+                "avg_stall_ms": 10.056800101010186
+            }
+        ],
+        "aaec_no_temp": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20979998642898232,
+                "avg_stall_ms": 20.39706838383834
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29293408458900905,
+                "avg_stall_ms": 18.061684814814768
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4218190176417117,
+                "avg_stall_ms": 14.496725286195362
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5846217139950814,
+                "avg_stall_ms": 10.056800101010186
+            }
+        ],
+        "aaec_no_gate": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20979998642898232,
+                "avg_stall_ms": 20.39706838383834
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29293408458900905,
+                "avg_stall_ms": 18.061684814814768
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4218190176417117,
+                "avg_stall_ms": 14.496725286195362
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5846217139950814,
+                "avg_stall_ms": 10.056800101010186
+            }
+        ],
+        "lru": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20907558751197397,
+                "avg_stall_ms": 20.41749666666667
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29200245256409707,
+                "avg_stall_ms": 18.087957138047067
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4208094439611722,
+                "avg_stall_ms": 14.52516356902363
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5835858541091147,
+                "avg_stall_ms": 10.08585158249168
+            }
+        ]
+    },
+    "4.0": {
+        "aaec": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20979998642898232,
+                "avg_stall_ms": 9.260722222222176
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29293408458900905,
+                "avg_stall_ms": 8.110005151515168
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4218190176417117,
+                "avg_stall_ms": 6.392898653198676
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5846217139950814,
+                "avg_stall_ms": 4.296423703703731
+            }
+        ],
+        "aaec_no_temp": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20979998642898232,
+                "avg_stall_ms": 9.260722222222176
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29293408458900905,
+                "avg_stall_ms": 8.110005151515168
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4218190176417117,
+                "avg_stall_ms": 6.392898653198676
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5846217139950814,
+                "avg_stall_ms": 4.296423703703731
+            }
+        ],
+        "aaec_no_gate": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20979998642898232,
+                "avg_stall_ms": 9.260722222222176
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29293408458900905,
+                "avg_stall_ms": 8.110005151515168
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4218190176417117,
+                "avg_stall_ms": 6.392898653198676
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5846217139950814,
+                "avg_stall_ms": 4.296423703703731
+            }
+        ],
+        "lru": [
+            {
+                "cache_size": 4,
+                "hit_rate": 0.20907558751197397,
+                "avg_stall_ms": 9.270923434343404
+            },
+            {
+                "cache_size": 8,
+                "hit_rate": 0.29200245256409707,
+                "avg_stall_ms": 8.123109292929291
+            },
+            {
+                "cache_size": 16,
+                "hit_rate": 0.4208094439611722,
+                "avg_stall_ms": 6.407063602693622
+            },
+            {
+                "cache_size": 32,
+                "hit_rate": 0.5835858541091147,
+                "avg_stall_ms": 4.310712356902389
+            }
+        ]
+    }
+}

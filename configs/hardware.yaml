@@ -1,0 +1,16 @@
+hardware:
+  device: "cuda:0"
+  num_gpus: 2
+  interconnect:
+    pcie_gen5_bw_gbps: 64.0
+    nvlink_bw_gbps: 450.0
+  memory:
+    hbm_capacity_gb: 95.0
+    dram_capacity_gb: 256.0
+  cache:
+    qwen3_30b:
+      cache_size: 128  # columns per expert (128 / 768 = ~16.6% sparsity cached)
+    deepseek_v2_lite:
+      cache_size: 256  # columns per expert (256 / 1408 = ~18.1% sparsity cached)
+    mixtral_8x7b:
+      cache_size: 2048 # columns per expert (2048 / 14336 = ~14.2% sparsity cached)

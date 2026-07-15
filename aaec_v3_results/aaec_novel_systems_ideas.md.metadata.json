@@ -1,0 +1,5 @@
+{
+  "summary": "Revised systems research proposal framing AAEC as introducing the 'neuron channel' as the fundamental unit of data movement for MoE serving, generalizing across single-node PCIe offloading, multi-GPU intra-node transfers, cross-node distributed clusters, hierarchical cache hierarchies, and asymmetric sub-expert replication.",
+  "updatedAt": "2026-07-03T11:41:06.242569202Z",
+  "userFacing": true
+}

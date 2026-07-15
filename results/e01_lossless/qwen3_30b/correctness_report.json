@@ -1,0 +1,7 @@
+{
+    "model_name": "qwen3_30b",
+    "max_abs_diff": 0.0078125,
+    "mean_abs_diff": 0.00031280517578125,
+    "cosine_similarity": 0.9999958872795105,
+    "verdict": "PASS"
+}

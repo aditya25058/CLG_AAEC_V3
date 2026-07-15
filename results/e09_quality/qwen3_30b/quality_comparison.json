@@ -1,0 +1,23 @@
+{
+    "model_name": "qwen3_30b",
+    "status": "COMPLETED",
+    "benchmarks": [
+        {
+            "task": "arc_easy",
+            "description": "ARC-Easy (100 samples)",
+            "accuracy": 0.78,
+            "accuracy_stderr": 0.04163331998932261,
+            "samples": 100,
+            "status": "PASS"
+        },
+        {
+            "task": "arc_challenge",
+            "description": "ARC-Challenge (100 samples)",
+            "accuracy": 0.52,
+            "accuracy_stderr": 0.050211673156867795,
+            "samples": 100,
+            "status": "PASS"
+        }
+    ],
+    "note": "AAEC is provably lossless (E01). These benchmarks verify end-to-end pipeline correctness, not AAEC-specific quality."
+}

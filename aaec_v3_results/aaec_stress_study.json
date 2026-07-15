@@ -1,0 +1,104 @@
+{
+    "1.0": [
+        {
+            "cache_size": 4,
+            "hit_rate": 0.20979998642898232,
+            "precision": 0.03331037681485333,
+            "recall": 0.000915888933974842,
+            "wasted_prefetch_gb": 0.70429696,
+            "avg_stall_ms": 42.67837585858569
+        },
+        {
+            "cache_size": 8,
+            "hit_rate": 0.29293408458900905,
+            "precision": 0.024567568874631244,
+            "recall": 0.0013158690002331263,
+            "wasted_prefetch_gb": 1.23922432,
+            "avg_stall_ms": 37.99392855218854
+        },
+        {
+            "cache_size": 16,
+            "hit_rate": 0.4218190176417117,
+            "precision": 0.016541797712293915,
+            "recall": 0.0017430769027797935,
+            "wasted_prefetch_gb": 2.01085952,
+            "avg_stall_ms": 30.774317508417692
+        },
+        {
+            "cache_size": 32,
+            "hit_rate": 0.5846217139950814,
+            "precision": 0.01131949431353229,
+            "recall": 0.0024875713185742816,
+            "wasted_prefetch_gb": 3.03110144,
+            "avg_stall_ms": 21.71163037037053
+        }
+    ],
+    "2.0": [
+        {
+            "cache_size": 4,
+            "hit_rate": 0.20979998642898232,
+            "precision": 0.03331037681485333,
+            "recall": 0.000915888933974842,
+            "wasted_prefetch_gb": 0.70429696,
+            "avg_stall_ms": 20.39706838383834
+        },
+        {
+            "cache_size": 8,
+            "hit_rate": 0.29293408458900905,
+            "precision": 0.024567568874631244,
+            "recall": 0.0013158690002331263,
+            "wasted_prefetch_gb": 1.23922432,
+            "avg_stall_ms": 18.061684814814768
+        },
+        {
+            "cache_size": 16,
+            "hit_rate": 0.4218190176417117,
+            "precision": 0.016541797712293915,
+            "recall": 0.0017430769027797935,
+            "wasted_prefetch_gb": 2.01085952,
+            "avg_stall_ms": 14.496725286195362
+        },
+        {
+            "cache_size": 32,
+            "hit_rate": 0.5846217139950814,
+            "precision": 0.01131949431353229,
+            "recall": 0.0024875713185742816,
+            "wasted_prefetch_gb": 3.03110144,
+            "avg_stall_ms": 10.056800101010186
+        }
+    ],
+    "4.0": [
+        {
+            "cache_size": 4,
+            "hit_rate": 0.20979998642898232,
+            "precision": 0.03331037681485333,
+            "recall": 0.000915888933974842,
+            "wasted_prefetch_gb": 0.70429696,
+            "avg_stall_ms": 9.260722222222176
+        },
+        {
+            "cache_size": 8,
+            "hit_rate": 0.29293408458900905,
+            "precision": 0.024567568874631244,
+            "recall": 0.0013158690002331263,
+            "wasted_prefetch_gb": 1.23922432,
+            "avg_stall_ms": 8.110005151515168
+        },
+        {
+            "cache_size": 16,
+            "hit_rate": 0.4218190176417117,
+            "precision": 0.016541797712293915,
+            "recall": 0.0017430769027797935,
+            "wasted_prefetch_gb": 2.01085952,
+            "avg_stall_ms": 6.392898653198676
+        },
+        {
+            "cache_size": 32,
+            "hit_rate": 0.5846217139950814,
+            "precision": 0.01131949431353229,
+            "recall": 0.0024875713185742816,
+            "wasted_prefetch_gb": 3.03110144,
+            "avg_stall_ms": 4.296423703703731
+        }
+    ]
+}

@@ -1,0 +1,184 @@
+{
+    "demand": [
+        {
+            "hit_rate": 0.0,
+            "total_transferred_gb": 33.50198272,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 26.305601717171754
+        },
+        {
+            "hit_rate": 0.0,
+            "total_transferred_gb": 33.50198272,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 5.161436936026939
+        },
+        {
+            "hit_rate": 0.0,
+            "total_transferred_gb": 33.50198272,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 1.6464486531986555
+        },
+        {
+            "hit_rate": 0.0,
+            "total_transferred_gb": 33.50198272,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 0.0
+        }
+    ],
+    "lru": [
+        {
+            "hit_rate": 0.5835858541091147,
+            "total_transferred_gb": 13.95069952,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 10.08585158249168
+        },
+        {
+            "hit_rate": 0.5835858541091147,
+            "total_transferred_gb": 13.95069952,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 1.5405842087542148
+        },
+        {
+            "hit_rate": 0.5835858541091147,
+            "total_transferred_gb": 13.95069952,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 0.3494952188552185
+        },
+        {
+            "hit_rate": 0.5835858541091147,
+            "total_transferred_gb": 13.95069952,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 0.0
+        }
+    ],
+    "powerinfer2": [
+        {
+            "hit_rate": 0.09400222149001215,
+            "total_transferred_gb": 0.0,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 49.90122895622896
+        },
+        {
+            "hit_rate": 0.09400222149001215,
+            "total_transferred_gb": 0.0,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 49.90122895622896
+        },
+        {
+            "hit_rate": 0.09400222149001215,
+            "total_transferred_gb": 0.0,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 49.90122895622896
+        },
+        {
+            "hit_rate": 0.09400222149001215,
+            "total_transferred_gb": 0.0,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 49.90122895622896
+        }
+    ],
+    "promoe": [
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 17.67844864,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 10.056800101010186
+        },
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 17.67844864,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 1.533978686868691
+        },
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 17.67844864,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 0.34732420875420844
+        },
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 17.67844864,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 0.0
+        }
+    ],
+    "adapmoe": [
+        {
+            "hit_rate": 0.584084986358682,
+            "total_transferred_gb": 13.9339776,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 10.063972020202112
+        },
+        {
+            "hit_rate": 0.584084986358682,
+            "total_transferred_gb": 13.9339776,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 1.530169494949497
+        },
+        {
+            "hit_rate": 0.584084986358682,
+            "total_transferred_gb": 13.9339776,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 0.34567599326599274
+        },
+        {
+            "hit_rate": 0.584084986358682,
+            "total_transferred_gb": 13.9339776,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 0.0
+        }
+    ],
+    "hobbit": [
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 4.41961216,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 5.902806430976423
+        },
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 4.41961216,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 3.7655965993265847
+        },
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 4.41961216,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 3.413942121212119
+        },
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 4.41961216,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 3.1514747474747784
+        }
+    ],
+    "aaec": [
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 16.98180096,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 10.056800101010186
+        },
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 16.98180096,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 1.533978686868691
+        },
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 16.98180096,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 0.34732420875420844
+        },
+        {
+            "hit_rate": 0.5846217139950814,
+            "total_transferred_gb": 16.98180096,
+            "wasted_prefetch_gb": 0.0,
+            "avg_stall_per_token_ms": 0.0
+        }
+    ]
+}

@@ -1,0 +1,28 @@
+models:
+  qwen3_30b:
+    name: "Qwen/Qwen3-30B-A3B"
+    path: "Qwen/Qwen3-30B-A3B"
+    type: "qwen3_moe"
+    num_experts: 128
+    top_k: 8
+    hidden_size: 4096
+    intermediate_size: 768
+    num_layers: 48
+  deepseek_v2_lite:
+    name: "deepseek-ai/DeepSeek-V2-Lite"
+    path: "deepseek-ai/DeepSeek-V2-Lite"
+    type: "deepseek_moe"
+    num_experts: 64
+    top_k: 6
+    hidden_size: 2048
+    intermediate_size: 1408
+    num_layers: 27
+  mixtral_8x7b:
+    name: "mistralai/Mixtral-8x7B-v0.1"
+    path: "mistralai/Mixtral-8x7B-v0.1"
+    type: "mixtral"
+    num_experts: 8
+    top_k: 2
+    hidden_size: 4096
+    intermediate_size: 14336
+    num_layers: 32

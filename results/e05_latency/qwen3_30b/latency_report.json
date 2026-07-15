@@ -1,0 +1,13 @@
+{
+    "model_name": "qwen3_30b",
+    "method": "dual_stream_cuda_event_timing",
+    "iterations": 500,
+    "hbm_only_latency_ms": 0.0303,
+    "full_sa_ffn_with_pcie_ms": 0.1201,
+    "sa_ffn_no_pcie_ms": 0.065,
+    "raw_pcie_transfer_ms": 0.0271,
+    "exposed_pcie_stall_ms": 0.0551,
+    "pcie_overlap_ratio": -1.0331,
+    "miss_columns": 16,
+    "transfer_size_bytes": 196608
+}

@@ -1,0 +1,42 @@
+{
+    "reactive": {
+        "4": {
+            "network_gb": 28.406575104,
+            "avg_stall_ms": 2.7547407838384084,
+            "throughput": 7.477890255125013,
+            "prefetch_hit_rate": 22.54138608305275
+        },
+        "8": {
+            "network_gb": 28.406575104,
+            "avg_stall_ms": 2.7547407838384084,
+            "throughput": 7.477890255125013,
+            "prefetch_hit_rate": 22.54138608305275
+        },
+        "16": {
+            "network_gb": 28.406575104,
+            "avg_stall_ms": 2.7547407838384084,
+            "throughput": 7.477890255125013,
+            "prefetch_hit_rate": 22.54138608305275
+        }
+    },
+    "predictive": {
+        "4": {
+            "network_gb": 35.971792896,
+            "avg_stall_ms": 2.2146709090909136,
+            "throughput": 9.276076129397667,
+            "prefetch_hit_rate": 22.54138608305275
+        },
+        "8": {
+            "network_gb": 36.12475392,
+            "avg_stall_ms": 2.2146709090909136,
+            "throughput": 9.276076129397667,
+            "prefetch_hit_rate": 22.54138608305275
+        },
+        "16": {
+            "network_gb": 36.236034048,
+            "avg_stall_ms": 2.2146709090909136,
+            "throughput": 9.276076129397667,
+            "prefetch_hit_rate": 22.54138608305275
+        }
+    }
+}
