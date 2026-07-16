@@ -41,7 +41,7 @@ MODELS = {
     },
     "deepseek_v2_lite": {
         "db_path": "/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/deepseek_lite_real.db",
-        "num_layers": 27,
+        "num_layers": 26,
         "num_experts": 64,
         "intermediate_dim": 1408,
         "hidden_size": 2048,
@@ -77,8 +77,10 @@ def load_db_traces(db_path: str):
             evaluation_db[p_id] = {}
         if t_pos not in evaluation_db[p_id]:
             evaluation_db[p_id][t_pos] = {}
+        if layer not in evaluation_db[p_id][t_pos]:
+            evaluation_db[p_id][t_pos][layer] = []
             
-        evaluation_db[p_id][t_pos][layer] = (exp_id, active_set)
+        evaluation_db[p_id][t_pos][layer].append((exp_id, active_set))
         
     print(f"Traces loaded. Total prompts: {len(evaluation_db)}")
     return evaluation_db
@@ -255,176 +257,59 @@ class RealDistributedAAECEngine:
                 for l in range(self.NL):
                     if l not in evaluation_db[p_id][t]:
                         continue
-                    exp_id, active_cols = evaluation_db[p_id][t][l]
+                    for exp_id, active_cols in evaluation_db[p_id][t][l]:
                     
-                    owner_rank = exp_id // self.experts_per_node
-                    is_local = (owner_rank == 0)
+                        owner_rank = exp_id // self.experts_per_node
+                        is_local = (owner_rank == 0)
                     
-                    cache = self.gpu_caches[l]
-                    active_keys = {(exp_id, col) for col in active_cols}
-                    local_active = active_keys.intersection(cache.keys())
-                    missed_keys = active_keys - local_active
+                        cache = self.gpu_caches[l]
+                        active_keys = {(exp_id, col) for col in active_cols}
+                        local_active = active_keys.intersection(cache.keys())
+                        missed_keys = active_keys - local_active
                     
-                    # Update cache access order
-                    for key in active_keys:
-                        if key in cache:
-                            cache.move_to_end(key)
-                        else:
-                            if len(cache) >= self.cache_capacity:
-                                cache.popitem(last=False)
-                            cache[key] = True
-                            
-                    # Local cache slices (simulated statically for Phase 1 compute)
-                    W_g_c = torch.randn(self.cache_size, self.H, dtype=torch.bfloat16, device=self.device)
-                    W_u_c = torch.randn(self.cache_size, self.H, dtype=torch.bfloat16, device=self.device)
-                    W_d_c = torch.randn(self.H, self.cache_size, dtype=torch.bfloat16, device=self.device)
-                    
-                    # Handle weight loading with async overlap
-                    if missed_keys:
-                        num_misses = len(missed_keys)
-                        miss_cols = sorted([col for (_, col) in missed_keys])
-                        m_idx = torch.tensor(miss_cols, dtype=torch.long, device=self.device)
-                        
-                        # Byte calculation: 3 tensors (gate, up, down)
-                        total_bytes = 3 * num_misses * self.H * 2
-                        
-                        gate_slice = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device=self.device)
-                        up_slice = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device=self.device)
-                        down_slice = torch.empty(self.H, num_misses, dtype=torch.bfloat16, device=self.device)
-                        
-                        if is_local:
-                            # --- LOCAL ACCESS: ASYNC PCIe COPY ---
-                            m_idx_cpu = m_idx.cpu()
-                            if self.is_cuda:
-                                c_start = torch.cuda.Event(enable_timing=True)
-                                c_end = torch.cuda.Event(enable_timing=True)
-                                p_start = torch.cuda.Event(enable_timing=True)
-                                p_end = torch.cuda.Event(enable_timing=True)
-                                
-                                # Step 1: Start async memory copy on the communication stream
-                                c_start.record()
-                                with torch.cuda.stream(self.comm_stream):
-                                    gate_slice.copy_(self.local_experts_cpu[exp_id]["gate"][m_idx_cpu], non_blocking=True)
-                                    up_slice.copy_(self.local_experts_cpu[exp_id]["up"][m_idx_cpu], non_blocking=True)
-                                    down_slice.copy_(self.local_experts_cpu[exp_id]["down"][:, m_idx_cpu], non_blocking=True)
-                                    c_end.record(self.comm_stream)
-                                    
-                                # Step 2: Run Phase 1 compute concurrently on the main stream
-                                p_start.record()
-                                g_c = torch.matmul(x, W_g_c.t())
-                                u_c = torch.matmul(x, W_u_c.t())
-                                y_c = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
-                                p_end.record()
-                                
-                                # Step 3: Synchronize streams before Phase 2
-                                torch.cuda.current_stream().wait_stream(self.comm_stream)
-                                
-                                # Step 4: Run Phase 2 compute
-                                g_m = torch.matmul(x, gate_slice.t())
-                                u_m = torch.matmul(x, up_slice.t())
-                                y_m = torch.matmul(F.silu(g_m) * u_m, down_slice.t())
-                                y = y_c + y_m
-                                
-                                segments.append(("comm", c_start, c_end))
-                                segments.append(("comp", p_start, p_end))
+                        # Update cache access order
+                        for key in active_keys:
+                            if key in cache:
+                                cache.move_to_end(key)
                             else:
-                                t0 = time.perf_counter()
-                                gate_slice.copy_(self.local_experts_cpu[exp_id]["gate"][m_idx_cpu])
-                                up_slice.copy_(self.local_experts_cpu[exp_id]["up"][m_idx_cpu])
-                                down_slice.copy_(self.local_experts_cpu[exp_id]["down"][:, m_idx_cpu])
-                                t_c = (time.perf_counter() - t0) * 1000.0
-                                
-                                t1 = time.perf_counter()
-                                g_c = torch.matmul(x, W_g_c.t())
-                                u_c = torch.matmul(x, W_u_c.t())
-                                y_c = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
-                                t_cp = (time.perf_counter() - t1) * 1000.0
-                                
-                                g_m = torch.matmul(x, gate_slice.t())
-                                u_m = torch.matmul(x, up_slice.t())
-                                y_m = torch.matmul(F.silu(g_m) * u_m, down_slice.t())
-                                y = y_c + y_m
-                                
-                                total_comm_time_ms += t_c
-                                total_comp_time_ms += t_cp
+                                if len(cache) >= self.cache_capacity:
+                                    cache.popitem(last=False)
+                                cache[key] = True
                             
-                        else:
-                            # --- REMOTE ACCESS: TRUE ASYNC STREAMING ---
-                            total_network_bytes += total_bytes
-                            
-                            if self.backend == "nccl" and self.is_cuda:
-                                c_start = torch.cuda.Event(enable_timing=True)
-                                c_end = torch.cuda.Event(enable_timing=True)
-                                p_start = torch.cuda.Event(enable_timing=True)
-                                p_end = torch.cuda.Event(enable_timing=True)
-                                
-                                # Step 1: Start async memory copy/request on comm stream
-                                c_start.record()
-                                with torch.cuda.stream(self.comm_stream):
-                                    # Send command & indices asynchronously on GPU using single copy
-                                    cmd_cpu = torch.tensor([exp_id, num_misses, 0], dtype=torch.long, device="cpu")
-                                    self.cmd_tensor.copy_(cmd_cpu)
-                                    
-                                    req_cmd = dist.isend(self.cmd_tensor, dst=owner_rank)
-                                    req_idx = dist.isend(m_idx, dst=owner_rank)
-                                    
-                                    # Receive weight slices asynchronously on GPU
-                                    req_g = dist.irecv(tensor=gate_slice, src=owner_rank, tag=1)
-                                    req_u = dist.irecv(tensor=up_slice, src=owner_rank, tag=2)
-                                    req_d = dist.irecv(tensor=down_slice, src=owner_rank, tag=3)
-                                    
-                                    c_end.record(self.comm_stream)
-                                    
-                                # Step 2: Run Phase 1 compute concurrently on the main stream
-                                p_start.record()
-                                g_c = torch.matmul(x, W_g_c.t())
-                                u_c = torch.matmul(x, W_u_c.t())
-                                y_c = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
-                                p_end.record()
-                                
-                                # Step 3: Wait for communication requests and stream to complete
-                                req_cmd.wait()
-                                req_idx.wait()
-                                req_g.wait()
-                                req_u.wait()
-                                req_d.wait()
-                                torch.cuda.current_stream().wait_stream(self.comm_stream)
-                                
-                                # Step 4: Run Phase 2 compute
-                                g_m = torch.matmul(x, gate_slice.t())
-                                u_m = torch.matmul(x, up_slice.t())
-                                y_m = torch.matmul(F.silu(g_m) * u_m, down_slice.t())
-                                y = y_c + y_m
-                                
-                                segments.append(("comm", c_start, c_end))
-                                segments.append(("comp", p_start, p_end))
-                            else:
-                                # --- GLOO OR NON-CUDA FALLBACK: CPU STAGING ---
+                        # Local cache slices (simulated statically for Phase 1 compute)
+                        W_g_c = torch.randn(self.cache_size, self.H, dtype=torch.bfloat16, device=self.device)
+                        W_u_c = torch.randn(self.cache_size, self.H, dtype=torch.bfloat16, device=self.device)
+                        W_d_c = torch.randn(self.H, self.cache_size, dtype=torch.bfloat16, device=self.device)
+                    
+                        # Handle weight loading with async overlap
+                        if missed_keys:
+                            num_misses = len(missed_keys)
+                            miss_cols = sorted([col for (_, col) in missed_keys])
+                            m_idx = torch.tensor(miss_cols, dtype=torch.long, device=self.device)
+                        
+                            # Byte calculation: 3 tensors (gate, up, down)
+                            total_bytes = 3 * num_misses * self.H * 2
+                        
+                            gate_slice = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device=self.device)
+                            up_slice = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device=self.device)
+                            down_slice = torch.empty(self.H, num_misses, dtype=torch.bfloat16, device=self.device)
+                        
+                            if is_local:
+                                # --- LOCAL ACCESS: ASYNC PCIe COPY ---
+                                m_idx_cpu = m_idx.cpu()
                                 if self.is_cuda:
                                     c_start = torch.cuda.Event(enable_timing=True)
                                     c_end = torch.cuda.Event(enable_timing=True)
                                     p_start = torch.cuda.Event(enable_timing=True)
                                     p_end = torch.cuda.Event(enable_timing=True)
-                                    
+                                
+                                    # Step 1: Start async memory copy on the communication stream
                                     c_start.record()
-                                    
-                                    # Send command & indices asynchronously on CPU
-                                    self.cmd_tensor[0] = exp_id
-                                    self.cmd_tensor[1] = num_misses
-                                    self.cmd_tensor[2] = 0
-                                    
-                                    m_idx_cpu = m_idx.cpu()
-                                    gate_slice_cpu = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device="cpu")
-                                    up_slice_cpu = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device="cpu")
-                                    down_slice_cpu = torch.empty(self.H, num_misses, dtype=torch.bfloat16, device="cpu")
-                                    
-                                    req_cmd = dist.isend(self.cmd_tensor, dst=owner_rank)
-                                    req_idx = dist.isend(m_idx_cpu, dst=owner_rank)
-                                    
-                                    # Receive weight slices asynchronously on CPU
-                                    req_g = dist.irecv(tensor=gate_slice_cpu, src=owner_rank, tag=1)
-                                    req_u = dist.irecv(tensor=up_slice_cpu, src=owner_rank, tag=2)
-                                    req_d = dist.irecv(tensor=down_slice_cpu, src=owner_rank, tag=3)
+                                    with torch.cuda.stream(self.comm_stream):
+                                        gate_slice.copy_(self.local_experts_cpu[exp_id]["gate"][m_idx_cpu], non_blocking=True)
+                                        up_slice.copy_(self.local_experts_cpu[exp_id]["up"][m_idx_cpu], non_blocking=True)
+                                        down_slice.copy_(self.local_experts_cpu[exp_id]["down"][:, m_idx_cpu], non_blocking=True)
+                                        c_end.record(self.comm_stream)
                                     
                                     # Step 2: Run Phase 1 compute concurrently on the main stream
                                     p_start.record()
@@ -432,83 +317,200 @@ class RealDistributedAAECEngine:
                                     u_c = torch.matmul(x, W_u_c.t())
                                     y_c = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
                                     p_end.record()
+                                
+                                    # Step 3: Synchronize streams before Phase 2
+                                    torch.cuda.current_stream().wait_stream(self.comm_stream)
+                                
+                                    # Step 4: Run Phase 2 compute
+                                    g_m = torch.matmul(x, gate_slice.t())
+                                    u_m = torch.matmul(x, up_slice.t())
+                                    y_m = torch.matmul(F.silu(g_m) * u_m, down_slice.t())
+                                    y = y_c + y_m
+                                
+                                    segments.append(("comm", c_start, c_end))
+                                    segments.append(("comp", p_start, p_end))
+                                else:
+                                    t0 = time.perf_counter()
+                                    gate_slice.copy_(self.local_experts_cpu[exp_id]["gate"][m_idx_cpu])
+                                    up_slice.copy_(self.local_experts_cpu[exp_id]["up"][m_idx_cpu])
+                                    down_slice.copy_(self.local_experts_cpu[exp_id]["down"][:, m_idx_cpu])
+                                    t_c = (time.perf_counter() - t0) * 1000.0
+                                
+                                    t1 = time.perf_counter()
+                                    g_c = torch.matmul(x, W_g_c.t())
+                                    u_c = torch.matmul(x, W_u_c.t())
+                                    y_c = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
+                                    t_cp = (time.perf_counter() - t1) * 1000.0
+                                
+                                    g_m = torch.matmul(x, gate_slice.t())
+                                    u_m = torch.matmul(x, up_slice.t())
+                                    y_m = torch.matmul(F.silu(g_m) * u_m, down_slice.t())
+                                    y = y_c + y_m
+                                
+                                    total_comm_time_ms += t_c
+                                    total_comp_time_ms += t_cp
+                            
+                            else:
+                                # --- REMOTE ACCESS: TRUE ASYNC STREAMING ---
+                                total_network_bytes += total_bytes
+                            
+                                if self.backend == "nccl" and self.is_cuda:
+                                    c_start = torch.cuda.Event(enable_timing=True)
+                                    c_end = torch.cuda.Event(enable_timing=True)
+                                    p_start = torch.cuda.Event(enable_timing=True)
+                                    p_end = torch.cuda.Event(enable_timing=True)
+                                
+                                    # Step 1: Start async memory copy/request on comm stream
+                                    c_start.record()
+                                    with torch.cuda.stream(self.comm_stream):
+                                        # Send command & indices asynchronously on GPU using single copy
+                                        cmd_cpu = torch.tensor([exp_id, num_misses, 0], dtype=torch.long, device="cpu")
+                                        self.cmd_tensor.copy_(cmd_cpu)
                                     
+                                        req_cmd = dist.isend(self.cmd_tensor, dst=owner_rank)
+                                        req_idx = dist.isend(m_idx, dst=owner_rank)
+                                    
+                                        # Receive weight slices asynchronously on GPU
+                                        req_g = dist.irecv(tensor=gate_slice, src=owner_rank, tag=1)
+                                        req_u = dist.irecv(tensor=up_slice, src=owner_rank, tag=2)
+                                        req_d = dist.irecv(tensor=down_slice, src=owner_rank, tag=3)
+                                    
+                                        c_end.record(self.comm_stream)
+                                    
+                                    # Step 2: Run Phase 1 compute concurrently on the main stream
+                                    p_start.record()
+                                    g_c = torch.matmul(x, W_g_c.t())
+                                    u_c = torch.matmul(x, W_u_c.t())
+                                    y_c = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
+                                    p_end.record()
+                                
                                     # Step 3: Wait for communication requests and stream to complete
                                     req_cmd.wait()
                                     req_idx.wait()
                                     req_g.wait()
                                     req_u.wait()
                                     req_d.wait()
-                                    
-                                    # Copy received CPU slices to GPU
-                                    gate_slice.copy_(gate_slice_cpu, non_blocking=True)
-                                    up_slice.copy_(up_slice_cpu, non_blocking=True)
-                                    down_slice.copy_(down_slice_cpu, non_blocking=True)
-                                    
+                                    torch.cuda.current_stream().wait_stream(self.comm_stream)
+                                
                                     # Step 4: Run Phase 2 compute
                                     g_m = torch.matmul(x, gate_slice.t())
                                     u_m = torch.matmul(x, up_slice.t())
                                     y_m = torch.matmul(F.silu(g_m) * u_m, down_slice.t())
                                     y = y_c + y_m
-                                    
-                                    c_end.record()
+                                
                                     segments.append(("comm", c_start, c_end))
                                     segments.append(("comp", p_start, p_end))
                                 else:
-                                    t0 = time.perf_counter()
-                                    self.cmd_tensor[0] = exp_id
-                                    self.cmd_tensor[1] = num_misses
-                                    self.cmd_tensor[2] = 0
+                                    # --- GLOO OR NON-CUDA FALLBACK: CPU STAGING ---
+                                    if self.is_cuda:
+                                        c_start = torch.cuda.Event(enable_timing=True)
+                                        c_end = torch.cuda.Event(enable_timing=True)
+                                        p_start = torch.cuda.Event(enable_timing=True)
+                                        p_end = torch.cuda.Event(enable_timing=True)
                                     
-                                    m_idx_cpu = m_idx.cpu()
-                                    gate_slice_cpu = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device="cpu")
-                                    up_slice_cpu = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device="cpu")
-                                    down_slice_cpu = torch.empty(self.H, num_misses, dtype=torch.bfloat16, device="cpu")
+                                        c_start.record()
                                     
-                                    dist.send(self.cmd_tensor, dst=owner_rank)
-                                    dist.send(m_idx_cpu, dst=owner_rank)
-                                    dist.recv(tensor=gate_slice_cpu, src=owner_rank, tag=1)
-                                    dist.recv(tensor=up_slice_cpu, src=owner_rank, tag=2)
-                                    dist.recv(tensor=down_slice_cpu, src=owner_rank, tag=3)
+                                        # Send command & indices asynchronously on CPU
+                                        self.cmd_tensor[0] = exp_id
+                                        self.cmd_tensor[1] = num_misses
+                                        self.cmd_tensor[2] = 0
                                     
-                                    gate_slice.copy_(gate_slice_cpu)
-                                    up_slice.copy_(up_slice_cpu)
-                                    down_slice.copy_(down_slice_cpu)
-                                    t_c = (time.perf_counter() - t0) * 1000.0
+                                        m_idx_cpu = m_idx.cpu()
+                                        gate_slice_cpu = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device="cpu")
+                                        up_slice_cpu = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device="cpu")
+                                        down_slice_cpu = torch.empty(self.H, num_misses, dtype=torch.bfloat16, device="cpu")
                                     
-                                    t1 = time.perf_counter()
-                                    g_c = torch.matmul(x, W_g_c.t())
-                                    u_c = torch.matmul(x, W_u_c.t())
-                                    y_c = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
-                                    t_cp = (time.perf_counter() - t1) * 1000.0
+                                        req_cmd = dist.isend(self.cmd_tensor, dst=owner_rank)
+                                        req_idx = dist.isend(m_idx_cpu, dst=owner_rank)
                                     
-                                    g_m = torch.matmul(x, gate_slice.t())
-                                    u_m = torch.matmul(x, up_slice.t())
-                                    y_m = torch.matmul(F.silu(g_m) * u_m, down_slice.t())
-                                    y = y_c + y_m
+                                        # Receive weight slices asynchronously on CPU
+                                        req_g = dist.irecv(tensor=gate_slice_cpu, src=owner_rank, tag=1)
+                                        req_u = dist.irecv(tensor=up_slice_cpu, src=owner_rank, tag=2)
+                                        req_d = dist.irecv(tensor=down_slice_cpu, src=owner_rank, tag=3)
                                     
-                                    total_comm_time_ms += t_c
-                                    total_comp_time_ms += t_cp
+                                        # Step 2: Run Phase 1 compute concurrently on the main stream
+                                        p_start.record()
+                                        g_c = torch.matmul(x, W_g_c.t())
+                                        u_c = torch.matmul(x, W_u_c.t())
+                                        y_c = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
+                                        p_end.record()
+                                    
+                                        # Step 3: Wait for communication requests and stream to complete
+                                        req_cmd.wait()
+                                        req_idx.wait()
+                                        req_g.wait()
+                                        req_u.wait()
+                                        req_d.wait()
+                                    
+                                        # Copy received CPU slices to GPU
+                                        gate_slice.copy_(gate_slice_cpu, non_blocking=True)
+                                        up_slice.copy_(up_slice_cpu, non_blocking=True)
+                                        down_slice.copy_(down_slice_cpu, non_blocking=True)
+                                    
+                                        # Step 4: Run Phase 2 compute
+                                        g_m = torch.matmul(x, gate_slice.t())
+                                        u_m = torch.matmul(x, up_slice.t())
+                                        y_m = torch.matmul(F.silu(g_m) * u_m, down_slice.t())
+                                        y = y_c + y_m
+                                    
+                                        c_end.record()
+                                        segments.append(("comm", c_start, c_end))
+                                        segments.append(("comp", p_start, p_end))
+                                    else:
+                                        t0 = time.perf_counter()
+                                        self.cmd_tensor[0] = exp_id
+                                        self.cmd_tensor[1] = num_misses
+                                        self.cmd_tensor[2] = 0
+                                    
+                                        m_idx_cpu = m_idx.cpu()
+                                        gate_slice_cpu = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device="cpu")
+                                        up_slice_cpu = torch.empty(num_misses, self.H, dtype=torch.bfloat16, device="cpu")
+                                        down_slice_cpu = torch.empty(self.H, num_misses, dtype=torch.bfloat16, device="cpu")
+                                    
+                                        dist.send(self.cmd_tensor, dst=owner_rank)
+                                        dist.send(m_idx_cpu, dst=owner_rank)
+                                        dist.recv(tensor=gate_slice_cpu, src=owner_rank, tag=1)
+                                        dist.recv(tensor=up_slice_cpu, src=owner_rank, tag=2)
+                                        dist.recv(tensor=down_slice_cpu, src=owner_rank, tag=3)
+                                    
+                                        gate_slice.copy_(gate_slice_cpu)
+                                        up_slice.copy_(up_slice_cpu)
+                                        down_slice.copy_(down_slice_cpu)
+                                        t_c = (time.perf_counter() - t0) * 1000.0
+                                    
+                                        t1 = time.perf_counter()
+                                        g_c = torch.matmul(x, W_g_c.t())
+                                        u_c = torch.matmul(x, W_u_c.t())
+                                        y_c = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
+                                        t_cp = (time.perf_counter() - t1) * 1000.0
+                                    
+                                        g_m = torch.matmul(x, gate_slice.t())
+                                        u_m = torch.matmul(x, up_slice.t())
+                                        y_m = torch.matmul(F.silu(g_m) * u_m, down_slice.t())
+                                        y = y_c + y_m
+                                    
+                                        total_comm_time_ms += t_c
+                                        total_comp_time_ms += t_cp
                             
-                    else:
-                        # Full Cache Hit: Compute cached portion only
-                        if self.is_cuda:
-                            p_start = torch.cuda.Event(enable_timing=True)
-                            p_end = torch.cuda.Event(enable_timing=True)
-                            
-                            p_start.record()
-                            g_c = torch.matmul(x, W_g_c.t())
-                            u_c = torch.matmul(x, W_u_c.t())
-                            y = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
-                            p_end.record()
-                            
-                            segments.append(("comp", p_start, p_end))
                         else:
-                            t1 = time.perf_counter()
-                            g_c = torch.matmul(x, W_g_c.t())
-                            u_c = torch.matmul(x, W_u_c.t())
-                            y = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
-                            total_comp_time_ms += (time.perf_counter() - t1) * 1000.0
+                            # Full Cache Hit: Compute cached portion only
+                            if self.is_cuda:
+                                p_start = torch.cuda.Event(enable_timing=True)
+                                p_end = torch.cuda.Event(enable_timing=True)
+                            
+                                p_start.record()
+                                g_c = torch.matmul(x, W_g_c.t())
+                                u_c = torch.matmul(x, W_u_c.t())
+                                y = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
+                                p_end.record()
+                            
+                                segments.append(("comp", p_start, p_end))
+                            else:
+                                t1 = time.perf_counter()
+                                g_c = torch.matmul(x, W_g_c.t())
+                                u_c = torch.matmul(x, W_u_c.t())
+                                y = torch.matmul(F.silu(g_c) * u_c, W_d_c.t())
+                                total_comp_time_ms += (time.perf_counter() - t1) * 1000.0
                         
                 # End step timer
                 if self.is_cuda:

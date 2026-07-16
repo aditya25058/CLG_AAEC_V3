@@ -17,7 +17,7 @@ MODELS = {
         "hidden_size": 2048, "intermediate": 768, "cache_size": 128, "miss_size": 16
     },
     "deepseek_v2_lite": {
-        "num_layers": 27, "num_experts": 64, "top_k": 6,
+        "num_layers": 26, "num_experts": 64, "top_k": 6,
         "hidden_size": 2048, "intermediate": 1408, "cache_size": 256, "miss_size": 32
     }
 }
