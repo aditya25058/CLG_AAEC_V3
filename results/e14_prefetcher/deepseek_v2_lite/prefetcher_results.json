@@ -1,42 +1,42 @@
 {
     "reactive": {
         "4": {
-            "network_gb": 10.863845376,
-            "avg_stall_ms": 1.0418359208191224,
-            "throughput": 33.75006807907047,
-            "prefetch_hit_rate": 10.897176603834641
+            "network_gb": 12.820156416,
+            "avg_stall_ms": 13.167485005714319,
+            "throughput": 2.9082058826197534,
+            "prefetch_hit_rate": 2.9945054945054945
         },
         "8": {
-            "network_gb": 11.20813056,
-            "avg_stall_ms": 1.0781130675768016,
-            "throughput": 32.670073318870465,
-            "prefetch_hit_rate": 10.897176603834641
+            "network_gb": 15.046483968,
+            "avg_stall_ms": 15.470244342857187,
+            "throughput": 2.4769252558856496,
+            "prefetch_hit_rate": 2.9945054945054945
         },
         "16": {
-            "network_gb": 11.355721728,
-            "avg_stall_ms": 1.093520404095572,
-            "throughput": 32.23201801931519,
-            "prefetch_hit_rate": 10.897176603834641
+            "network_gb": 16.306618368,
+            "avg_stall_ms": 16.796550857142936,
+            "throughput": 2.282009229686727,
+            "prefetch_hit_rate": 2.9945054945054945
         }
     },
     "predictive": {
         "4": {
-            "network_gb": 14.77515264,
-            "avg_stall_ms": 0.9463149843003426,
-            "throughput": 36.96788713077059,
-            "prefetch_hit_rate": 10.897176603834641
+            "network_gb": 15.781552128,
+            "avg_stall_ms": 12.954039040000026,
+            "throughput": 2.9559124326955706,
+            "prefetch_hit_rate": 2.9945054945054945
         },
         "8": {
-            "network_gb": 15.3105408,
-            "avg_stall_ms": 0.9818376709897654,
-            "throughput": 35.70202319555919,
-            "prefetch_hit_rate": 10.897176603834641
+            "network_gb": 18.456895488,
+            "avg_stall_ms": 15.218630765714371,
+            "throughput": 2.517722247475445,
+            "prefetch_hit_rate": 2.9945054945054945
         },
         "16": {
-            "network_gb": 15.505711104,
-            "avg_stall_ms": 0.9971629406143386,
-            "throughput": 35.182280136417184,
-            "prefetch_hit_rate": 10.897176603834641
+            "network_gb": 19.886137344,
+            "avg_stall_ms": 16.51843920000009,
+            "throughput": 2.3202964119637817,
+            "prefetch_hit_rate": 2.9945054945054945
         }
     }
 }

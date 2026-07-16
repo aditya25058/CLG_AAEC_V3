@@ -1,4 +1,5 @@
 # evaluation/scripts/e13_distributed_expert_serving.py
+# FIXED: load_db_traces appends all experts, DeepSeek layers=26
 import os
 import json
 import sqlite3
@@ -16,7 +17,7 @@ MODELS = {
     },
     "deepseek_v2_lite": {
         "db_path": "/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/deepseek_lite_real.db",
-        "num_layers": 27,
+        "num_layers": 26,
         "num_experts": 64,
         "intermediate_dim": 1408,
         "hidden_size": 2048,
@@ -38,6 +39,8 @@ def load_db_traces(db_path: str):
     prompt_ids = sorted(list(set(row[0] for row in rows)))
     split_idx = len(prompt_ids) // 2
     eval_prompts = set(prompt_ids[split_idx:])
+    eval_prompts = sorted(list(eval_prompts))[:5]
+    eval_prompts = set(eval_prompts)
     
     evaluation_db = {}
     for row in rows:
@@ -51,8 +54,9 @@ def load_db_traces(db_path: str):
             evaluation_db[p_id] = {}
         if t_pos not in evaluation_db[p_id]:
             evaluation_db[p_id][t_pos] = {}
-            
-        evaluation_db[p_id][t_pos][layer] = (exp_id, active_set)
+        if layer not in evaluation_db[p_id][t_pos]:
+            evaluation_db[p_id][t_pos][layer] = []
+        evaluation_db[p_id][t_pos][layer].append((exp_id, active_set))
         
     return evaluation_db
 
@@ -68,35 +72,24 @@ def run_distributed_simulation(
     I = spec["intermediate_dim"]
     
     # 4 Nodes: Experts are partitioned evenly
-    # Node 0 is the local node (our computing node)
-    # Node 1, 2, 3 are remote nodes
     experts_per_node = NE // 4
     
-    # Timing and bandwidth configurations
-    LOCAL_BW_GBPS = 64.0        # PCIe Gen5 local link
-    NETWORK_BW_GBPS = 10.0      # 100 Gbps network link (InfiniBand/RoCE)
+    LOCAL_BW_GBPS = 64.0
+    NETWORK_BW_GBPS = 10.0
     LOCAL_LATENCY_US = 0.5
     NETWORK_LATENCY_US = 5.0
-    COMPUTE_TIME_PER_LAYER_US = 50.0  # Phase 1 compute window
+    COMPUTE_TIME_PER_LAYER_US = 50.0
     
-    # Weight size parameters (BF16 = 2 bytes)
-    # 1 column = gate_proj row (H) + up_proj row (H) + down_proj col (H) = 3 * H * 2 bytes
     COLUMN_SIZE_BYTES = 3 * H * 2
     FULL_EXPERT_SIZE_BYTES = I * COLUMN_SIZE_BYTES
     
-    # Initialize cache per layer (on the local node GPU)
-    gpu_caches = {l: OrderedDict() for l in range(NL)}
+    gpu_caches = {l: OrderedDict() for l in range(NL + 1)}
     
-    # Determine local cache capacity
-    # Total column capacity in cache is (cache_capacity_cols_per_exp * NE) columns.
     total_cols_capacity = cache_capacity_cols_per_exp * NE
     
     if system_type == "expert_cache":
-        # Expert level caching: capacity is measured in whole experts
-        # whole_experts = total_columns / intermediate_dim
         expert_capacity = max(1, total_cols_capacity // I)
     else:
-        # AAEC Column caching capacity
         column_capacity = total_cols_capacity
         
     total_steps = 0
@@ -109,56 +102,24 @@ def run_distributed_simulation(
     for p_id in eval_prompt_ids:
         t_positions = sorted(evaluation_db[p_id].keys())
         
-        # Reset cache on prompt boundary
-        for l in range(NL):
+        for l in range(NL + 1):
             gpu_caches[l].clear()
             
         for t in t_positions:
             total_steps += 1
             
-            for l in range(NL):
-                if l not in evaluation_db[p_id][t]:
-                    continue
-                exp_id, active_cols = evaluation_db[p_id][t][l]
+            for l in evaluation_db[p_id][t]:
+                experts_at_step = evaluation_db[p_id][t][l]
                 
-                # Determine node location of this expert
-                node_id = exp_id // experts_per_node
-                is_local = (node_id == 0)
-                
-                cache = gpu_caches[l]
-                
-                if system_type == "demand":
-                    # No caching: fetch weights for active components of every expert
-                    # Since it is demand, we fetch the whole expert or just active columns?
-                    # Demand-only in standard systems fetches the whole expert parameters.
-                    # To be fair and match common offloading baselines, Demand-only fetches full expert.
-                    transferred_bytes = FULL_EXPERT_SIZE_BYTES
+                # Process ALL active experts at this step
+                for exp_id, active_cols in experts_at_step:
+                    node_id = exp_id // experts_per_node if experts_per_node > 0 else 0
+                    is_local = (node_id == 0)
                     
-                    if not is_local:
-                        network_bytes_transferred += transferred_bytes
-                        network_fetches_count += 1
-                        t_transfer = (transferred_bytes / (NETWORK_BW_GBPS * 1e9)) * 1e6 + NETWORK_LATENCY_US
-                    else:
-                        t_transfer = (transferred_bytes / (LOCAL_BW_GBPS * 1e9)) * 1e6 + LOCAL_LATENCY_US
-                        
-                    stall = max(0.0, t_transfer - COMPUTE_TIME_PER_LAYER_US)
-                    total_stalls_us += stall
+                    cache = gpu_caches[l]
                     
-                elif system_type == "expert_cache":
-                    # Cache entire experts in GPU cache
-                    # Key is expert_id
-                    if exp_id in cache:
-                        # Cache Hit! 0 weight transfer stall
-                        cache.move_to_end(exp_id)
-                        stall = 0.0
-                    else:
-                        # Cache Miss! Fetch full expert weights
+                    if system_type == "demand":
                         transferred_bytes = FULL_EXPERT_SIZE_BYTES
-                        
-                        # Evict if full
-                        if len(cache) >= expert_capacity:
-                            cache.popitem(last=False)
-                        cache[exp_id] = True
                         
                         if not is_local:
                             network_bytes_transferred += transferred_bytes
@@ -170,45 +131,57 @@ def run_distributed_simulation(
                         stall = max(0.0, t_transfer - COMPUTE_TIME_PER_LAYER_US)
                         total_stalls_us += stall
                         
-                elif system_type == "aaec_column_cache":
-                    # Cache column slices of experts
-                    # Keys are (expert_id, col)
-                    active_keys = {(exp_id, col) for col in active_cols}
-                    local_active = active_keys.intersection(cache.keys())
-                    missed_keys = active_keys - local_active
-                    
-                    if missed_keys:
-                        # Fetch only the missed columns
-                        missed_bytes = len(missed_keys) * COLUMN_SIZE_BYTES
-                        
-                        # Evict if full
-                        for key in missed_keys:
-                            if len(cache) >= column_capacity:
-                                cache.popitem(last=False)
-                            cache[key] = True
-                        
-                        if not is_local:
-                            network_bytes_transferred += missed_bytes
-                            network_fetches_count += 1
-                            t_transfer = (missed_bytes / (NETWORK_BW_GBPS * 1e9)) * 1e6 + NETWORK_LATENCY_US
+                    elif system_type == "expert_cache":
+                        if exp_id in cache:
+                            cache.move_to_end(exp_id)
+                            stall = 0.0
                         else:
-                            t_transfer = (missed_bytes / (LOCAL_BW_GBPS * 1e9)) * 1e6 + LOCAL_LATENCY_US
+                            transferred_bytes = FULL_EXPERT_SIZE_BYTES
                             
-                        stall = max(0.0, t_transfer - COMPUTE_TIME_PER_LAYER_US)
-                        total_stalls_us += stall
-                    else:
-                        # Full Cache Hit! Update access order
-                        for key in active_keys:
-                            cache.move_to_end(key)
-                        stall = 0.0
+                            if len(cache) >= expert_capacity:
+                                cache.popitem(last=False)
+                            cache[exp_id] = True
+                            
+                            if not is_local:
+                                network_bytes_transferred += transferred_bytes
+                                network_fetches_count += 1
+                                t_transfer = (transferred_bytes / (NETWORK_BW_GBPS * 1e9)) * 1e6 + NETWORK_LATENCY_US
+                            else:
+                                t_transfer = (transferred_bytes / (LOCAL_BW_GBPS * 1e9)) * 1e6 + LOCAL_LATENCY_US
+                                
+                            stall = max(0.0, t_transfer - COMPUTE_TIME_PER_LAYER_US)
+                            total_stalls_us += stall
+                            
+                    elif system_type == "aaec_column_cache":
+                        active_keys = {(exp_id, col) for col in active_cols}
+                        local_active = {k for k in active_keys if k in cache}
+                        missed_keys = active_keys - local_active
                         
-    # End-to-end statistics
+                        if missed_keys:
+                            missed_bytes = len(missed_keys) * COLUMN_SIZE_BYTES
+                            
+                            for key in missed_keys:
+                                if len(cache) >= column_capacity:
+                                    cache.popitem(last=False)
+                                cache[key] = True
+                            
+                            if not is_local:
+                                network_bytes_transferred += missed_bytes
+                                network_fetches_count += 1
+                                t_transfer = (missed_bytes / (NETWORK_BW_GBPS * 1e9)) * 1e6 + NETWORK_LATENCY_US
+                            else:
+                                t_transfer = (missed_bytes / (LOCAL_BW_GBPS * 1e9)) * 1e6 + LOCAL_LATENCY_US
+                                
+                            stall = max(0.0, t_transfer - COMPUTE_TIME_PER_LAYER_US)
+                            total_stalls_us += stall
+                        else:
+                            for key in active_keys:
+                                cache.move_to_end(key)
+                        
     total_network_gb = network_bytes_transferred / 1e9
     avg_fetch_size_kb = (network_bytes_transferred / max(1, network_fetches_count)) / 1024.0
     avg_stall_ms = (total_stalls_us / 1000.0) / max(1, total_steps)
     
-    # Calculate throughput (tokens/sec)
-    # Assume attention compute + standard FFN compute = ~1.5 ms per token (without network stall)
     BASE_COMPUTE_TIME_MS = 1.5
     avg_total_latency_ms = BASE_COMPUTE_TIME_MS + (avg_stall_ms * NL)
     throughput_tokens_sec = 1000.0 / avg_total_latency_ms

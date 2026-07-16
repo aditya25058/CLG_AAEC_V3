@@ -1,17 +1,17 @@
 {
     "full": {
-        "hit_rate": 0.5802647767910187,
-        "avg_stall_ms": 1.0083413993174057,
-        "total_transferred_gb": 13.45547264
+        "hit_rate": 0.3528632871980726,
+        "avg_stall_ms": 25.593428191126307,
+        "total_transferred_gb": 128.266899456
     },
     "no_prefetcher": {
-        "hit_rate": 0.5802647767910187,
-        "avg_stall_ms": 1.0083413993174057,
-        "total_transferred_gb": 8.97093632
+        "hit_rate": 0.3566644097421845,
+        "avg_stall_ms": 25.43784927645047,
+        "total_transferred_gb": 123.960213504
     },
     "no_column_level": {
-        "hit_rate": 0.9301836421001537,
-        "avg_stall_ms": 1.3748208532423312,
-        "total_transferred_gb": 58.05441024
+        "hit_rate": 0.9024408699788127,
+        "avg_stall_ms": 33.24231348122857,
+        "total_transferred_gb": 169.623945216
     }
 }

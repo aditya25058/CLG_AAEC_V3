@@ -1,4 +1,5 @@
 # evaluation/scripts/e08_stress_tests.py
+# FIXED: load_db_traces appends all experts, DeepSeek layers=26
 import os
 import json
 import sqlite3
@@ -11,13 +12,15 @@ MODELS = {
         "num_layers": 48,
         "num_experts": 128,
         "intermediate_dim": 768,
+        "hidden_size": 2048,
         "active_experts": 8
     },
     "deepseek_v2_lite": {
         "db_path": "/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/deepseek_lite_real.db",
-        "num_layers": 27,
+        "num_layers": 26,
         "num_experts": 64,
         "intermediate_dim": 1408,
+        "hidden_size": 2048,
         "active_experts": 6
     }
 }
@@ -52,8 +55,9 @@ def load_db_traces(db_path: str):
             target_db[p_id] = {}
         if t_pos not in target_db[p_id]:
             target_db[p_id][t_pos] = {}
-            
-        target_db[p_id][t_pos][layer] = (exp_id, active_set)
+        if layer not in target_db[p_id][t_pos]:
+            target_db[p_id][t_pos][layer] = []
+        target_db[p_id][t_pos][layer].append((exp_id, active_set))
         
     return calibration_db, evaluation_db
 
@@ -61,24 +65,23 @@ def train_predictors(calibration_db, spec: dict):
     NL = spec["num_layers"]
     NE = spec["num_experts"]
     
-    transition_matrix = np.zeros((NL, NE, NE))
-    layer_expert_counts = np.zeros((NL, NE))
+    transition_matrix = np.zeros((NL + 1, NE, NE))
+    layer_expert_counts = np.zeros((NL + 1, NE))
     
     for p_id in calibration_db:
         for t in calibration_db[p_id]:
-            for l in range(NL):
-                if l in calibration_db[p_id][t]:
-                    exp_id, active_set = calibration_db[p_id][t][l]
+            for l in calibration_db[p_id][t]:
+                for exp_id, active_set in calibration_db[p_id][t][l]:
                     if exp_id < NE:
                         layer_expert_counts[l, exp_id] += 1
                         
                         if l > 0 and (l-1) in calibration_db[p_id][t]:
-                            prev_exp, _ = calibration_db[p_id][t][l-1]
-                            if prev_exp < NE:
-                                transition_matrix[l, prev_exp, exp_id] += 1
+                            for prev_exp, _ in calibration_db[p_id][t][l-1]:
+                                if prev_exp < NE:
+                                    transition_matrix[l, prev_exp, exp_id] += 1
                                 
     # Normalize transition matrix
-    for l in range(NL):
+    for l in range(NL + 1):
         for e in range(NE):
             row_sum = transition_matrix[l, e].sum()
             if row_sum > 0:
@@ -96,42 +99,42 @@ def run_cold_start_stress(evaluation_db, spec: dict):
     cache_size = 32
     layer_capacity = cache_size * NE
     
-    gpu_caches = {l: OrderedDict() for l in range(NL)}
+    gpu_caches = {l: OrderedDict() for l in range(NL + 1)}
     
-    # We want to measure the hit rate as a function of the token position index
     token_hits = np.zeros(64)
     token_totals = np.zeros(64)
     
     eval_prompt_ids = sorted(evaluation_db.keys())
     
-    for p_id in eval_prompt_ids[:10]: # Check first 10 test prompts
-        t_positions = sorted(evaluation_db[p_id].keys())[:64] # Look at first 64 tokens
+    for p_id in eval_prompt_ids[:10]:
+        t_positions = sorted(evaluation_db[p_id].keys())[:64]
         
         # Reset cache at start of prompt
-        for l in range(NL):
+        for l in range(NL + 1):
             gpu_caches[l].clear()
             
         for t_idx, t in enumerate(t_positions):
             if t_idx >= 64:
                 break
                 
-            for l in range(NL):
-                if l not in evaluation_db[p_id][t]:
-                    continue
-                exp_id, active_cols = evaluation_db[p_id][t][l]
-                
+            for l in evaluation_db[p_id][t]:
                 cache = gpu_caches[l]
-                active_keys = {(exp_id, col) for col in active_cols}
                 
-                local_active = active_keys.intersection(cache.keys())
+                # Collect all active keys across ALL experts at this step
+                all_active_keys = set()
+                for exp_id, active_cols in evaluation_db[p_id][t][l]:
+                    for col in active_cols:
+                        all_active_keys.add((exp_id, col))
+                
+                local_active = all_active_keys.intersection(cache.keys())
                 hits = len(local_active)
-                misses = len(active_keys) - hits
+                misses = len(all_active_keys) - hits
                 
                 token_hits[t_idx] += hits
                 token_totals[t_idx] += (hits + misses)
                 
                 # Update cache
-                for key in active_keys:
+                for key in all_active_keys:
                     if key in cache:
                         cache.move_to_end(key)
                     else:

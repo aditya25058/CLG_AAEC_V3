@@ -1,4 +1,6 @@
 # evaluation/scripts/e10_ablation_study.py
+# FIXED: load_db_traces appends, correct COLUMN_SIZE, model-specific intermediate_dim,
+#        prefetch items inserted into cache, DeepSeek layers=26
 import os
 import json
 import sqlite3
@@ -11,13 +13,15 @@ MODELS = {
         "num_layers": 48,
         "num_experts": 128,
         "intermediate_dim": 768,
+        "hidden_size": 2048,
         "active_experts": 8
     },
     "deepseek_v2_lite": {
         "db_path": "/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/deepseek_lite_real.db",
-        "num_layers": 27,
+        "num_layers": 26,
         "num_experts": 64,
         "intermediate_dim": 1408,
+        "hidden_size": 2048,
         "active_experts": 6
     }
 }
@@ -52,24 +56,25 @@ def load_db_traces(db_path: str):
             target_db[p_id] = {}
         if t_pos not in target_db[p_id]:
             target_db[p_id][t_pos] = {}
-            
-        target_db[p_id][t_pos][layer] = (exp_id, active_set)
+        if layer not in target_db[p_id][t_pos]:
+            target_db[p_id][t_pos][layer] = []
+        target_db[p_id][t_pos][layer].append((exp_id, active_set))
         
     return calibration_db, evaluation_db
 
 def train_predictors(calibration_db, spec: dict):
     NL = spec["num_layers"]
     NE = spec["num_experts"]
+    I = spec["intermediate_dim"]
     
-    transition_matrix = np.zeros((NL, NE, NE))
-    layer_expert_counts = np.zeros((NL, NE))
+    transition_matrix = np.zeros((NL + 1, NE, NE))
+    layer_expert_counts = np.zeros((NL + 1, NE))
     expert_col_counts = {}
     
     for p_id in calibration_db:
         for t in calibration_db[p_id]:
-            for l in range(NL):
-                if l in calibration_db[p_id][t]:
-                    exp_id, active_set = calibration_db[p_id][t][l]
+            for l in calibration_db[p_id][t]:
+                for exp_id, active_set in calibration_db[p_id][t][l]:
                     if exp_id < NE:
                         layer_expert_counts[l, exp_id] += 1
                         
@@ -80,12 +85,12 @@ def train_predictors(calibration_db, spec: dict):
                             expert_col_counts[key][col] = expert_col_counts[key].get(col, 0) + 1
                         
                         if l > 0 and (l-1) in calibration_db[p_id][t]:
-                            prev_exp, _ = calibration_db[p_id][t][l-1]
-                            if prev_exp < NE:
-                                transition_matrix[l, prev_exp, exp_id] += 1
+                            for prev_exp, _ in calibration_db[p_id][t][l-1]:
+                                if prev_exp < NE:
+                                    transition_matrix[l, prev_exp, exp_id] += 1
                                 
     # Normalize transition matrix
-    for l in range(NL):
+    for l in range(NL + 1):
         for e in range(NE):
             row_sum = transition_matrix[l, e].sum()
             if row_sum > 0:
@@ -94,18 +99,19 @@ def train_predictors(calibration_db, spec: dict):
                 transition_matrix[l, e] = 1.0 / NE
                 
     # Precompute top columns per expert based on calibration profiles
+    # FIXED: use model-specific intermediate_dim instead of hardcoded 768
     top_cols_per_expert = {}
-    for l in range(NL):
+    for l in range(NL + 1):
         for e in range(NE):
             key = (l, e)
             if key in expert_col_counts:
                 sorted_cols = sorted(expert_col_counts[key].keys(), key=lambda x: expert_col_counts[key][x], reverse=True)
-                if len(sorted_cols) < 768:
-                    inactive = list(set(range(768)) - set(sorted_cols))
+                if len(sorted_cols) < I:
+                    inactive = list(set(range(I)) - set(sorted_cols))
                     sorted_cols.extend(inactive)
                 top_cols_per_expert[key] = sorted_cols
             else:
-                top_cols_per_expert[key] = list(range(768))
+                top_cols_per_expert[key] = list(range(I))
                 
     layer_0_most_frequent = int(np.argmax(layer_expert_counts[0]))
     return transition_matrix, top_cols_per_expert, layer_0_most_frequent
@@ -122,19 +128,20 @@ def run_ablation_simulation(
 ):
     NL = spec["num_layers"]
     NE = spec["num_experts"]
+    I = spec["intermediate_dim"]
+    H = spec["hidden_size"]
     
     COMPUTE_TIME_PER_LAYER_US = 50.0
     LATENCY_OVERHEAD_PER_DMA_US = 0.5
-    COLUMN_SIZE_BYTES = 5120 * 2
+    # FIXED: correct column size = 3 weight matrices * hidden_size * 2 bytes (BF16)
+    COLUMN_SIZE_BYTES = 3 * H * 2
     
     # Layer-wise caches
-    gpu_caches = {l: OrderedDict() for l in range(NL)}
+    gpu_caches = {l: OrderedDict() for l in range(NL + 1)}
     
     # If column-level caching is ablated, cache capacity is expert-level
     if ablation == "no_column_level":
-        # Expert level caching: size matches whole experts (768 columns)
-        # Store full expert weights in cache
-        layer_capacity = cache_size  # cache_size whole experts
+        layer_capacity = cache_size
     else:
         layer_capacity = cache_size * NE
     
@@ -158,26 +165,26 @@ def run_ablation_simulation(
         for idx, t in enumerate(t_positions):
             total_steps += 1
             
-            for l in range(NL):
-                if l not in evaluation_db[p_id][t]:
-                    continue
-                exp_id, active_cols = evaluation_db[p_id][t][l]
-                
+            for l in evaluation_db[p_id][t]:
+                experts_at_step = evaluation_db[p_id][t][l]
                 cache = gpu_caches[l]
                 
                 if ablation == "no_column_level":
-                    # Whole expert hit check
-                    active_keys = {exp_id}
+                    # Whole expert hit check across ALL active experts
+                    active_keys = {exp_id for exp_id, _ in experts_at_step}
                 else:
-                    active_keys = {(exp_id, col) for col in active_cols}
+                    # Column-level hit check across ALL active experts
+                    active_keys = set()
+                    for exp_id, active_cols in experts_at_step:
+                        for col in active_cols:
+                            active_keys.add((exp_id, col))
                 
-                local_active = active_keys.intersection(cache.keys())
+                local_active = {k for k in active_keys if k in cache}
                 missed = active_keys - local_active
                 
-                # In ablation no_column_level, a miss requires fetching the entire expert parameters (768 columns)
                 if ablation == "no_column_level":
-                    hits = len(local_active) * 768
-                    miss_cols_count = len(missed) * 768
+                    hits = len(local_active) * I
+                    miss_cols_count = len(missed) * I
                 else:
                     hits = len(local_active)
                     miss_cols_count = len(missed)
@@ -207,49 +214,69 @@ def run_ablation_simulation(
             if idx < len(t_positions) - 1:
                 # If prefetcher is ablated, skip prefetching entirely
                 if ablation == "no_prefetcher":
-                    continue
-                    
-                for l in range(NL):
-                    if l == 0:
-                        pred_exp = layer_0_most_frequent
-                    else:
-                        if (l-1) in evaluation_db[p_id][t]:
-                            prev_exp, _ = evaluation_db[p_id][t][l-1]
-                            if prev_exp < NE:
-                                pred_exp = int(np.argmax(transition_matrix[l, prev_exp]))
+                    pass
+                else:
+                    for l in evaluation_db[p_id][t]:
+                        if ablation == "no_column_level":
+                            # Predict expert-level
+                            if l == 0:
+                                pred_exp = layer_0_most_frequent
                             else:
-                                pred_exp = 0
-                        else:
-                            pred_exp = 0
+                                if (l-1) in evaluation_db[p_id][t]:
+                                    prev_exp = evaluation_db[p_id][t][l-1][0][0]  # first expert's id
+                                    if prev_exp < NE:
+                                        pred_exp = int(np.argmax(transition_matrix[l, prev_exp]))
+                                    else:
+                                        pred_exp = 0
+                                else:
+                                    pred_exp = 0
                             
-                    cache = gpu_caches[l]
-                    
-                    if ablation == "no_column_level":
-                        # Prefetch whole expert
-                        predicted_keys = {pred_exp}
-                        missing = predicted_keys - cache.keys()
-                        if missing:
-                            current_prefetch_queue[l] = missing
-                            total_prefetched_bytes += len(missing) * 768 * COLUMN_SIZE_BYTES
-                    else:
-                        # Column-level prefetch
-                        temp_cols = prev_token_active_cols.get((l, pred_exp), set())
-                        pred_cols_set = {(pred_exp, col) for col in temp_cols}
-                        
-                        # Fallback static columns
-                        static_cols = set([(pred_exp, col) for col in top_cols_per_expert[(l, pred_exp)][:cache_size]])
-                        predicted_keys = pred_cols_set.union(static_cols)
-                        
-                        missing = predicted_keys - cache.keys()
-                        if missing:
-                            current_prefetch_queue[l] = missing
-                            total_prefetched_bytes += len(missing) * COLUMN_SIZE_BYTES
+                            cache = gpu_caches[l]
+                            predicted_keys = {pred_exp}
+                            missing = {k for k in predicted_keys if k not in cache}
+                            if missing:
+                                current_prefetch_queue[l] = missing
+                                total_prefetched_bytes += len(missing) * I * COLUMN_SIZE_BYTES
+                                # FIXED: insert prefetched items into cache
+                                for key in missing:
+                                    if len(cache) >= layer_capacity:
+                                        cache.popitem(last=False)
+                                    cache[key] = True
+                        else:
+                            # Column-level prefetch
+                            if l == 0:
+                                pred_exp = layer_0_most_frequent
+                            else:
+                                if (l-1) in evaluation_db[p_id][t]:
+                                    prev_exp = evaluation_db[p_id][t][l-1][0][0]
+                                    if prev_exp < NE:
+                                        pred_exp = int(np.argmax(transition_matrix[l, prev_exp]))
+                                    else:
+                                        pred_exp = 0
+                                else:
+                                    pred_exp = 0
+                            
+                            cache = gpu_caches[l]
+                            temp_cols = prev_token_active_cols.get((l, pred_exp), set())
+                            pred_cols_set = {(pred_exp, col) for col in temp_cols}
+                            
+                            static_cols = set([(pred_exp, col) for col in top_cols_per_expert[(l, pred_exp)][:cache_size]])
+                            predicted_keys = pred_cols_set.union(static_cols)
+                            
+                            missing = {k for k in predicted_keys if k not in cache}
+                            if missing:
+                                current_prefetch_queue[l] = missing
+                                total_prefetched_bytes += len(missing) * COLUMN_SIZE_BYTES
+                                # FIXED: insert prefetched items into cache
+                                for key in missing:
+                                    if len(cache) >= layer_capacity:
+                                        cache.popitem(last=False)
+                                    cache[key] = True
                             
             # Update temporal history
             prev_token_active_cols.clear()
-            for l in range(NL):
-                if l in evaluation_db[p_id][t]:
-                    exp_id, active_cols = evaluation_db[p_id][t][l]
+            for l in evaluation_db[p_id][t]:
+                for exp_id, active_cols in evaluation_db[p_id][t][l]:
                     prev_token_active_cols[(l, exp_id)] = active_cols
                     
     hit_rate = total_hits / max(1, total_hits + total_misses)
@@ -278,7 +305,7 @@ def main():
                 "avg_stall_ms": res["avg_stall_ms"],
                 "total_transferred_gb": res["total_transferred_gb"]
             }
-            print(f"  Ablation: {a:<16} | Hit Rate: {res['hit_rate']*100:.2f}% | Stall: {res['avg_stall_ms']:.4f} ms")
+            print(f"  Ablation: {a:<16} | Hit Rate: {res['hit_rate']*100:.2f}% | Stall: {res['avg_stall_ms']:.4f} ms | Data: {res['total_transferred_gb']:.2f} GB")
                 
         out_dir = f"/home/palakm/MoEServingSim/evaluation/results/e10_ablation/{model_name}"
         os.makedirs(out_dir, exist_ok=True)

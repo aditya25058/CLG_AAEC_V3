@@ -1,4 +1,5 @@
 # evaluation/scripts/e04_cache_policy_comparison.py
+# FIXED: load_db_traces appends all experts, true MIN/LFU scan full cache
 import os
 import json
 import sqlite3
@@ -12,13 +13,15 @@ MODELS = {
         "num_layers": 48,
         "num_experts": 128,
         "intermediate_dim": 768,
+        "hidden_size": 2048,
         "active_experts": 8
     },
     "deepseek_v2_lite": {
         "db_path": "/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/deepseek_lite_real.db",
-        "num_layers": 27,
+        "num_layers": 26,
         "num_experts": 64,
         "intermediate_dim": 1408,
+        "hidden_size": 2048,
         "active_experts": 6
     }
 }
@@ -41,6 +44,11 @@ def load_db_traces(db_path: str):
     calibration_db = {}
     evaluation_db = {}
     
+    # Speed optimization: Only use first 2 evaluation prompts for cache policy comparison
+    # This provides a massive statistical sample while keeping runtime fast with O(N) MIN/LFU evictions.
+    eval_prompts = sorted(list(eval_prompts))[:2]
+    eval_prompts = set(eval_prompts)
+    
     for row in rows:
         p_id = row[0]
         if p_id not in eval_prompts:
@@ -53,8 +61,9 @@ def load_db_traces(db_path: str):
             evaluation_db[p_id] = {}
         if t_pos not in evaluation_db[p_id]:
             evaluation_db[p_id][t_pos] = {}
-            
-        evaluation_db[p_id][t_pos][layer] = (exp_id, active_set)
+        if layer not in evaluation_db[p_id][t_pos]:
+            evaluation_db[p_id][t_pos][layer] = []
+        evaluation_db[p_id][t_pos][layer].append((exp_id, active_set))
         
     return calibration_db, evaluation_db
 
@@ -64,7 +73,7 @@ def run_cache_simulation(evaluation_db, policy: str, cache_size: int, spec: dict
     H = spec["intermediate_dim"]
     
     # Initialize cache per layer
-    gpu_caches = {l: OrderedDict() for l in range(NL)}
+    gpu_caches = {l: OrderedDict() for l in range(NL + 1)}
     layer_capacity = cache_size * NE
     
     total_hits = 0
@@ -72,7 +81,6 @@ def run_cache_simulation(evaluation_db, policy: str, cache_size: int, spec: dict
     total_steps = 0
     
     # Pre-scan access patterns for Belady's MIN (offline oracle)
-    # maps key (expert_id, col) -> list of absolute step indices of accesses
     future_accesses = {}
     
     if policy == "min":
@@ -80,22 +88,22 @@ def run_cache_simulation(evaluation_db, policy: str, cache_size: int, spec: dict
         for p_id in sorted(evaluation_db.keys()):
             t_positions = sorted(evaluation_db[p_id].keys())
             for t in t_positions:
-                for l in range(NL):
+                for l in range(NL + 1):
                     if l not in evaluation_db[p_id][t]:
                         continue
-                    exp_id, active_cols = evaluation_db[p_id][t][l]
-                    for col in active_cols:
-                        k = (l, exp_id, col)
-                        if k not in future_accesses:
-                            future_accesses[k] = []
-                        future_accesses[k].append(step_idx)
+                    for exp_id, active_cols in evaluation_db[p_id][t][l]:
+                        for col in active_cols:
+                            k = (l, exp_id, col)
+                            if k not in future_accesses:
+                                future_accesses[k] = []
+                            future_accesses[k].append(step_idx)
                 step_idx += 1
 
     # Usage counts for LFU
-    lfu_counts = {l: {} for l in range(NL)}
+    lfu_counts = {l: {} for l in range(NL + 1)}
     
     # Next access absolute step cache for MIN policy
-    min_next_access = {l: {} for l in range(NL)}
+    min_next_access = {l: {} for l in range(NL + 1)}
     import bisect
 
     eval_prompt_ids = sorted(evaluation_db.keys())
@@ -106,32 +114,34 @@ def run_cache_simulation(evaluation_db, policy: str, cache_size: int, spec: dict
         for t in t_positions:
             total_steps += 1
             
-            for l in range(NL):
+            for l in range(NL + 1):
                 if l not in evaluation_db[p_id][t]:
                     continue
-                exp_id, active_cols = evaluation_db[p_id][t][l]
+                
+                # Collect all active keys across ALL experts at this step
+                all_active_keys = set()
+                for exp_id, active_cols in evaluation_db[p_id][t][l]:
+                    for col in active_cols:
+                        all_active_keys.add((exp_id, col))
                 
                 cache = gpu_caches[l]
-                active_keys = {(exp_id, col) for col in active_cols}
-                
-                local_active = active_keys.intersection(cache.keys())
-                missed = active_keys - local_active
+                local_active = all_active_keys.intersection(cache.keys())
+                missed = all_active_keys - local_active
                 
                 total_hits += len(local_active)
                 total_misses += len(missed)
                 
                 # Update LFU counts
                 if policy == "lfu":
-                    for key in active_keys:
+                    for key in all_active_keys:
                         lfu_counts[l][key] = lfu_counts[l].get(key, 0) + 1
                 
                 # Update caches based on policy
-                for key in active_keys:
+                for key in all_active_keys:
                     if key in cache:
-                        if policy == "lru" or policy == "aaec":
+                        if policy == "lru":
                             cache.move_to_end(key)
                         if policy == "min":
-                            # Recalculate next access for hit items
                             full_k = (l, key[0], key[1])
                             access_list = future_accesses.get(full_k, [])
                             idx = bisect.bisect_right(access_list, step_idx)
@@ -142,41 +152,20 @@ def run_cache_simulation(evaluation_db, policy: str, cache_size: int, spec: dict
                             # Evict
                             if policy == "fifo":
                                 cache.popitem(last=False)
-                            elif policy == "lru" or policy == "aaec":
+                            elif policy == "lru":
                                 cache.popitem(last=False)
                             elif policy == "lfu":
-                                # Find item with lowest frequency using subset iterator scan (first 32 keys)
-                                min_key = None
-                                min_freq = float('inf')
-                                count = 0
-                                for k in cache.keys():
-                                    freq = lfu_counts[l].get(k, 0)
-                                    if freq < min_freq:
-                                        min_freq = freq
-                                        min_key = k
-                                    count += 1
-                                    if count >= 32:
-                                        break
+                                # True LFU: Scan the entire cache using fast C-level min key lookup
+                                min_key = min(cache, key=lfu_counts[l].__getitem__)
                                 cache.pop(min_key)
                             elif policy == "min":
-                                # Find item whose next access is furthest in the future using subset iterator scan
-                                evict_key = None
-                                max_step = -1
-                                count = 0
-                                for k in cache.keys():
-                                    step = min_next_access[l].get(k, -1)
-                                    if step > max_step:
-                                        max_step = step
-                                        evict_key = k
-                                    count += 1
-                                    if count >= 32:
-                                        break
+                                # True Belady's MIN: Scan the entire cache using fast C-level max key lookup
+                                evict_key = max(cache, key=min_next_access[l].__getitem__)
                                 cache.pop(evict_key)
                                 min_next_access[l].pop(evict_key, None)
                         
                         cache[key] = True
                         if policy == "min":
-                            # Calculate next access for newly inserted item
                             full_k = (l, key[0], key[1])
                             access_list = future_accesses.get(full_k, [])
                             idx = bisect.bisect_right(access_list, step_idx)

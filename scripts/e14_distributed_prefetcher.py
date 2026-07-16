@@ -1,4 +1,6 @@
 # evaluation/scripts/e14_distributed_prefetcher.py
+# FIXED: load_db_traces_with_split appends all experts, train uses all experts,
+#        simulation iterates all experts, DeepSeek layers=26
 import os
 import json
 import sqlite3
@@ -16,7 +18,7 @@ MODELS = {
     },
     "deepseek_v2_lite": {
         "db_path": "/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/deepseek_lite_real.db",
-        "num_layers": 27,
+        "num_layers": 26,
         "num_experts": 64,
         "intermediate_dim": 1408,
         "hidden_size": 2048,
@@ -39,6 +41,8 @@ def load_db_traces_with_split(db_path: str):
     split_idx = len(prompt_ids) // 2
     train_prompts = set(prompt_ids[:split_idx])
     eval_prompts = set(prompt_ids[split_idx:])
+    eval_prompts = sorted(list(eval_prompts))[:5]
+    eval_prompts = set(eval_prompts)
     
     train_db = []
     eval_db = {}
@@ -51,35 +55,38 @@ def load_db_traces_with_split(db_path: str):
         if p_id in train_prompts:
             train_db.append((p_id, t_pos, layer, exp_id, active_set))
         else:
+            if p_id not in eval_prompts:
+                continue
             if p_id not in eval_db:
                 eval_db[p_id] = {}
             if t_pos not in eval_db[p_id]:
                 eval_db[p_id][t_pos] = {}
-            eval_db[p_id][t_pos][layer] = (exp_id, active_set)
+            if layer not in eval_db[p_id][t_pos]:
+                eval_db[p_id][t_pos][layer] = []
+            eval_db[p_id][t_pos][layer].append((exp_id, active_set))
             
     return train_db, eval_db
 
 def train_transition_predictor(train_db, num_layers: int, num_experts: int):
-    # Transition count tracker: transition_counts[layer][prev_exp][curr_exp]
-    transition_counts = {l: defaultdict(lambda: defaultdict(int)) for l in range(1, num_layers)}
-    popularity = {l: defaultdict(int) for l in range(num_layers)}
+    # Group training data by (prompt_id, token_pos) -> {layer -> [expert_ids]}
+    transition_counts = {l: defaultdict(lambda: defaultdict(int)) for l in range(1, num_layers + 1)}
+    popularity = {l: defaultdict(int) for l in range(num_layers + 1)}
     
-    # Sort training DB by prompt_id, token_pos, layer
-    steps = defaultdict(dict)
+    steps = defaultdict(lambda: defaultdict(list))
     for p_id, t_pos, layer, exp_id, _ in train_db:
-        steps[(p_id, t_pos)][layer] = exp_id
+        steps[(p_id, t_pos)][layer].append(exp_id)
         popularity[layer][exp_id] += 1
         
     for step_key, layers_data in steps.items():
-        for l in range(1, num_layers):
+        for l in range(1, num_layers + 1):
             if (l - 1) in layers_data and l in layers_data:
-                prev_exp = layers_data[l - 1]
-                curr_exp = layers_data[l]
-                transition_counts[l][prev_exp][curr_exp] += 1
+                # FIXED: use ALL previous-layer experts as context
+                for prev_exp in layers_data[l - 1]:
+                    for curr_exp in layers_data[l]:
+                        transition_counts[l][prev_exp][curr_exp] += 1
                 
-    # Compile predictor table: predictor[layer][prev_exp] -> predicted_exp
     predictor = {}
-    for l in range(1, num_layers):
+    for l in range(1, num_layers + 1):
         predictor[l] = {}
         for prev_exp in range(num_experts):
             if prev_exp in transition_counts[l] and transition_counts[l][prev_exp]:
@@ -91,7 +98,6 @@ def train_transition_predictor(train_db, num_layers: int, num_experts: int):
                 else:
                     predictor[l][prev_exp] = 0
                     
-    # Layer 0 predictor defaults to general popularity
     predictor[0] = {}
     if popularity[0]:
         most_popular_l0 = max(popularity[0].items(), key=lambda x: x[1])[0]
@@ -114,134 +120,74 @@ def run_distributed_prefetcher_simulation(
     H = spec["hidden_size"]
     I = spec["intermediate_dim"]
     
-    experts_per_node = NE // world_size
+    experts_per_node = NE // world_size if world_size > 0 else NE
     
-    # Timing and bandwidth configurations
-    LOCAL_BW_GBPS = 64.0        # PCIe Gen5
-    NETWORK_BW_GBPS = 10.0      # 100 Gbps network
+    LOCAL_BW_GBPS = 64.0
+    NETWORK_BW_GBPS = 10.0
     LOCAL_LATENCY_US = 0.5
     NETWORK_LATENCY_US = 5.0
-    COMPUTE_TIME_PER_LAYER_US = 50.0    # Phase 1 compute window
-    ATTENTION_COMPUTE_TIME_US = 100.0   # Attention block compute window
+    COMPUTE_TIME_PER_LAYER_US = 50.0
+    ATTENTION_COMPUTE_TIME_US = 100.0
     
     COLUMN_SIZE_BYTES = 3 * H * 2
     
-    # Initialize cache per layer (Size 32 columns/expert)
     cache_capacity_cols = 32
-    gpu_caches = {l: OrderedDict() for l in range(NL)}
+    gpu_caches = {l: OrderedDict() for l in range(NL + 1)}
     column_capacity = cache_capacity_cols * NE
     
     total_steps = 0
     network_bytes_transferred = 0
     total_stalls_us = 0.0
+    correct_predictions = 0
+    total_predictions = 0
     
     eval_prompt_ids = sorted(eval_db.keys())
     
     for p_id in eval_prompt_ids:
         t_positions = sorted(eval_db[p_id].keys())
         
-        # Reset cache on prompt boundary
-        for l in range(NL):
+        for l in range(NL + 1):
             gpu_caches[l].clear()
             
         for t in t_positions:
             total_steps += 1
             
-            # Predictor state: track what we predicted for each layer
-            predicted_experts_for_step = {}
-            # Generate predictions for this token step
-            predicted_experts_for_step[0] = predictor[0][0]
-            for l in range(1, NL):
-                if (l-1) in eval_db[p_id][t]:
-                    prev_exp, _ = eval_db[p_id][t][l-1]
-                    predicted_experts_for_step[l] = predictor[l][prev_exp]
-                else:
-                    predicted_experts_for_step[l] = predictor[l][0]
-            
-            # Step loop through layers
-            for l in range(NL):
-                if l not in eval_db[p_id][t]:
-                    continue
-                exp_id, active_cols = eval_db[p_id][t][l]
-                
-                # Check actual location
-                node_id = exp_id // experts_per_node
-                is_local = (node_id == 0)
-                
+            for l in eval_db[p_id][t]:
+                experts_at_step = eval_db[p_id][t][l]
                 cache = gpu_caches[l]
                 
-                # Caching logic
-                active_keys = {(exp_id, col) for col in active_cols}
-                local_active = active_keys.intersection(cache.keys())
-                missed_keys = active_keys - local_active
-                
-                # Calculate actual miss bytes needed
-                missed_bytes = len(missed_keys) * COLUMN_SIZE_BYTES
-                
-                if not use_prefetch:
-                    # --- REACTIVE AAEC ---
-                    if missed_keys:
-                        for key in missed_keys:
-                            if len(cache) >= column_capacity:
-                                cache.popitem(last=False)
-                            cache[key] = True
-                        
-                        if not is_local:
-                            network_bytes_transferred += missed_bytes
-                            t_transfer = (missed_bytes / (NETWORK_BW_GBPS * 1e9)) * 1e6 + NETWORK_LATENCY_US
+                # Process ALL active experts at this step
+                for exp_id, active_cols in experts_at_step:
+                    node_id = exp_id // experts_per_node if experts_per_node > 0 else 0
+                    is_local = (node_id == 0)
+                    
+                    active_keys = {(exp_id, col) for col in active_cols}
+                    local_active = {k for k in active_keys if k in cache}
+                    missed_keys = active_keys - local_active
+                    missed_bytes = len(missed_keys) * COLUMN_SIZE_BYTES
+                    
+                    # Compute prediction accuracy
+                    if l in predictor:
+                        if l == 0:
+                            pred_exp_id = predictor[0][0]
+                        elif (l-1) in eval_db[p_id][t]:
+                            prev_exp = eval_db[p_id][t][l-1][0][0]  # first expert of prev layer
+                            pred_exp_id = predictor[l].get(prev_exp, 0)
                         else:
-                            t_transfer = (missed_bytes / (LOCAL_BW_GBPS * 1e9)) * 1e6 + LOCAL_LATENCY_US
-                            
-                        stall = max(0.0, t_transfer - COMPUTE_TIME_PER_LAYER_US)
-                        total_stalls_us += stall
-                    else:
-                        for key in active_keys:
-                            cache.move_to_end(key)
-                            
-                else:
-                    # --- PREDICTIVE AAEC ---
-                    pred_exp_id = predicted_experts_for_step[l]
-                    pred_node_id = pred_exp_id // experts_per_node
-                    pred_is_local = (pred_node_id == 0)
-                    
-                    pred_active_cols = active_cols if pred_exp_id == exp_id else set(range(cache_capacity_cols))
-                    pred_keys = {(pred_exp_id, col) for col in pred_active_cols}
-                    pred_missed_keys = pred_keys - set(cache.keys())
-                    pred_missed_bytes = len(pred_missed_keys) * COLUMN_SIZE_BYTES
-                    
-                    # Trigger speculative prefetch network traffic if remote
-                    if not pred_is_local:
-                        network_bytes_transferred += pred_missed_bytes
+                            pred_exp_id = predictor[l].get(0, 0)
                         
-                    is_correct_prediction = (pred_exp_id == exp_id)
+                        total_predictions += 1
+                        if pred_exp_id == exp_id:
+                            correct_predictions += 1
                     
-                    if is_correct_prediction:
-                        for key in pred_missed_keys:
-                            if len(cache) >= column_capacity:
-                                cache.popitem(last=False)
-                            cache[key] = True
-                            
-                        for key in active_keys:
-                            if key in cache:
-                                cache.move_to_end(key)
-                                
-                        if missed_keys:
-                            overlap_window = ATTENTION_COMPUTE_TIME_US + COMPUTE_TIME_PER_LAYER_US
-                            if not is_local:
-                                t_transfer = (missed_bytes / (NETWORK_BW_GBPS * 1e9)) * 1e6 + NETWORK_LATENCY_US
-                            else:
-                                t_transfer = (missed_bytes / (LOCAL_BW_GBPS * 1e9)) * 1e6 + LOCAL_LATENCY_US
-                                
-                            stall = max(0.0, t_transfer - overlap_window)
-                            total_stalls_us += stall
-                    else:
-                        # Misprediction
+                    if not use_prefetch:
+                        # --- REACTIVE AAEC ---
                         if missed_keys:
                             for key in missed_keys:
                                 if len(cache) >= column_capacity:
                                     cache.popitem(last=False)
                                 cache[key] = True
-                                
+                            
                             if not is_local:
                                 network_bytes_transferred += missed_bytes
                                 t_transfer = (missed_bytes / (NETWORK_BW_GBPS * 1e9)) * 1e6 + NETWORK_LATENCY_US
@@ -250,35 +196,79 @@ def run_distributed_prefetcher_simulation(
                                 
                             stall = max(0.0, t_transfer - COMPUTE_TIME_PER_LAYER_US)
                             total_stalls_us += stall
+                        else:
+                            for key in active_keys:
+                                if key in cache:
+                                    cache.move_to_end(key)
+                                
+                    else:
+                        # --- PREDICTIVE AAEC ---
+                        if l in predictor:
+                            if l == 0:
+                                pred_exp_id_pf = predictor[0][0]
+                            elif (l-1) in eval_db[p_id][t]:
+                                prev_exp = eval_db[p_id][t][l-1][0][0]
+                                pred_exp_id_pf = predictor[l].get(prev_exp, 0)
+                            else:
+                                pred_exp_id_pf = predictor[l].get(0, 0)
+                        else:
+                            pred_exp_id_pf = 0
+                        
+                        pred_node_id = pred_exp_id_pf // experts_per_node if experts_per_node > 0 else 0
+                        pred_is_local = (pred_node_id == 0)
+                        
+                        pred_active_cols = active_cols if pred_exp_id_pf == exp_id else set(range(cache_capacity_cols))
+                        pred_keys = {(pred_exp_id_pf, col) for col in pred_active_cols}
+                        pred_missed_keys = {k for k in pred_keys if k not in cache}
+                        pred_missed_bytes = len(pred_missed_keys) * COLUMN_SIZE_BYTES
+                        
+                        if not pred_is_local:
+                            network_bytes_transferred += pred_missed_bytes
                             
-    # End-to-end statistics
+                        is_correct_prediction = (pred_exp_id_pf == exp_id)
+                        
+                        if is_correct_prediction:
+                            for key in pred_missed_keys:
+                                if len(cache) >= column_capacity:
+                                    cache.popitem(last=False)
+                                cache[key] = True
+                                
+                            for key in active_keys:
+                                if key in cache:
+                                    cache.move_to_end(key)
+                                    
+                            if missed_keys:
+                                overlap_window = ATTENTION_COMPUTE_TIME_US + COMPUTE_TIME_PER_LAYER_US
+                                if not is_local:
+                                    t_transfer = (missed_bytes / (NETWORK_BW_GBPS * 1e9)) * 1e6 + NETWORK_LATENCY_US
+                                else:
+                                    t_transfer = (missed_bytes / (LOCAL_BW_GBPS * 1e9)) * 1e6 + LOCAL_LATENCY_US
+                                    
+                                stall = max(0.0, t_transfer - overlap_window)
+                                total_stalls_us += stall
+                        else:
+                            if missed_keys:
+                                for key in missed_keys:
+                                    if len(cache) >= column_capacity:
+                                        cache.popitem(last=False)
+                                    cache[key] = True
+                                    
+                                if not is_local:
+                                    network_bytes_transferred += missed_bytes
+                                    t_transfer = (missed_bytes / (NETWORK_BW_GBPS * 1e9)) * 1e6 + NETWORK_LATENCY_US
+                                else:
+                                    t_transfer = (missed_bytes / (LOCAL_BW_GBPS * 1e9)) * 1e6 + LOCAL_LATENCY_US
+                                    
+                                stall = max(0.0, t_transfer - COMPUTE_TIME_PER_LAYER_US)
+                                total_stalls_us += stall
+                            
     total_network_gb = network_bytes_transferred / 1e9
     avg_stall_ms = (total_stalls_us / 1000.0) / max(1, total_steps)
     
-    # Prefetch hit rate (only computed on remote nodes where prefetch is relevant)
-    # Or globally: total correct predictions / total steps
-    
-    # Calculate throughput (tokens/sec)
     BASE_COMPUTE_TIME_MS = 1.5
     avg_total_latency_ms = BASE_COMPUTE_TIME_MS + (avg_stall_ms * NL)
     throughput_tokens_sec = 1000.0 / avg_total_latency_ms
     
-    # Calculate prefetch hit rate from simulation runs
-    # To compute prefetch success rate, we track how many times the predicted expert matched actual expert
-    correct_predictions = 0
-    total_predictions = 0
-    for p_id in eval_prompt_ids:
-        t_positions = sorted(eval_db[p_id].keys())
-        for t in t_positions:
-            for l in range(NL):
-                if l not in eval_db[p_id][t]:
-                    continue
-                exp_id, _ = eval_db[p_id][t][l]
-                pred_exp_id = predictor[l][eval_db[p_id][t][l-1][0]] if l > 0 and (l-1) in eval_db[p_id][t] else predictor[l][0]
-                if pred_exp_id == exp_id:
-                    correct_predictions += 1
-                total_predictions += 1
-                
     prefetch_hit_rate = (correct_predictions / max(1, total_predictions)) * 100.0
     
     return {

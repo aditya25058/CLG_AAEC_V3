@@ -1,6 +1,8 @@
 # evaluation/scripts/e11_baseline_comparison.py
 # NOTE: This is an INTERNAL configuration sweep (demand vs. AAEC variants),
 # NOT a comparison against external systems like vLLM, DeepSpeed, or PowerInfer.
+# FIXED: load_db_traces appends, correct COLUMN_SIZE, model-specific intermediate_dim,
+#        prefetch items inserted into cache, DeepSeek layers=26
 import os
 import json
 import sqlite3
@@ -13,13 +15,15 @@ MODELS = {
         "num_layers": 48,
         "num_experts": 128,
         "intermediate_dim": 768,
+        "hidden_size": 2048,
         "active_experts": 8
     },
     "deepseek_v2_lite": {
         "db_path": "/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/deepseek_lite_real.db",
-        "num_layers": 27,
+        "num_layers": 26,
         "num_experts": 64,
         "intermediate_dim": 1408,
+        "hidden_size": 2048,
         "active_experts": 6
     }
 }
@@ -54,24 +58,25 @@ def load_db_traces(db_path: str):
             target_db[p_id] = {}
         if t_pos not in target_db[p_id]:
             target_db[p_id][t_pos] = {}
-            
-        target_db[p_id][t_pos][layer] = (exp_id, active_set)
+        if layer not in target_db[p_id][t_pos]:
+            target_db[p_id][t_pos][layer] = []
+        target_db[p_id][t_pos][layer].append((exp_id, active_set))
         
     return calibration_db, evaluation_db
 
 def train_predictors(calibration_db, spec: dict):
     NL = spec["num_layers"]
     NE = spec["num_experts"]
+    I = spec["intermediate_dim"]
     
-    transition_matrix = np.zeros((NL, NE, NE))
-    layer_expert_counts = np.zeros((NL, NE))
+    transition_matrix = np.zeros((NL + 1, NE, NE))
+    layer_expert_counts = np.zeros((NL + 1, NE))
     expert_col_counts = {}
     
     for p_id in calibration_db:
         for t in calibration_db[p_id]:
-            for l in range(NL):
-                if l in calibration_db[p_id][t]:
-                    exp_id, active_set = calibration_db[p_id][t][l]
+            for l in calibration_db[p_id][t]:
+                for exp_id, active_set in calibration_db[p_id][t][l]:
                     if exp_id < NE:
                         layer_expert_counts[l, exp_id] += 1
                         
@@ -82,12 +87,11 @@ def train_predictors(calibration_db, spec: dict):
                             expert_col_counts[key][col] = expert_col_counts[key].get(col, 0) + 1
                         
                         if l > 0 and (l-1) in calibration_db[p_id][t]:
-                            prev_exp, _ = calibration_db[p_id][t][l-1]
-                            if prev_exp < NE:
-                                transition_matrix[l, prev_exp, exp_id] += 1
+                            for prev_exp, _ in calibration_db[p_id][t][l-1]:
+                                if prev_exp < NE:
+                                    transition_matrix[l, prev_exp, exp_id] += 1
                                 
-    # Normalize transition matrix
-    for l in range(NL):
+    for l in range(NL + 1):
         for e in range(NE):
             row_sum = transition_matrix[l, e].sum()
             if row_sum > 0:
@@ -95,19 +99,18 @@ def train_predictors(calibration_db, spec: dict):
             else:
                 transition_matrix[l, e] = 1.0 / NE
                 
-    # Precompute top columns per expert based on calibration profiles
     top_cols_per_expert = {}
-    for l in range(NL):
+    for l in range(NL + 1):
         for e in range(NE):
             key = (l, e)
             if key in expert_col_counts:
                 sorted_cols = sorted(expert_col_counts[key].keys(), key=lambda x: expert_col_counts[key][x], reverse=True)
-                if len(sorted_cols) < 768:
-                    inactive = list(set(range(768)) - set(sorted_cols))
+                if len(sorted_cols) < I:
+                    inactive = list(set(range(I)) - set(sorted_cols))
                     sorted_cols.extend(inactive)
                 top_cols_per_expert[key] = sorted_cols
             else:
-                top_cols_per_expert[key] = list(range(768))
+                top_cols_per_expert[key] = list(range(I))
                 
     layer_0_most_frequent = int(np.argmax(layer_expert_counts[0]))
     return transition_matrix, top_cols_per_expert, layer_0_most_frequent
@@ -124,14 +127,14 @@ def run_sota_baseline_comparison(
 ):
     NL = spec["num_layers"]
     NE = spec["num_experts"]
-    AE = spec["active_experts"]
+    I = spec["intermediate_dim"]
+    H = spec["hidden_size"]
     
-    COMPUTE_TIME_PER_LAYER_US = 50.0 # Standard attention execution window
+    COMPUTE_TIME_PER_LAYER_US = 50.0
     LATENCY_OVERHEAD_PER_DMA_US = 0.5
-    COLUMN_SIZE_BYTES = 5120 * 2  # standard bf16 FFN parameters size
+    COLUMN_SIZE_BYTES = 3 * H * 2
     
-    # Layer-wise caches
-    gpu_caches = {l: OrderedDict() for l in range(NL)}
+    gpu_caches = {l: OrderedDict() for l in range(NL + 1)}
     layer_capacity = cache_size * NE
     
     total_hits = 0
@@ -154,16 +157,17 @@ def run_sota_baseline_comparison(
         for idx, t in enumerate(t_positions):
             total_steps += 1
             
-            for l in range(NL):
-                if l not in evaluation_db[p_id][t]:
-                    continue
-                exp_id, active_cols = evaluation_db[p_id][t][l]
-                
+            for l in evaluation_db[p_id][t]:
+                experts_at_step = evaluation_db[p_id][t][l]
                 cache = gpu_caches[l]
-                active_keys = {(exp_id, col) for col in active_cols}
+                
+                # Collect all active column keys across ALL experts
+                active_keys = set()
+                for exp_id, active_cols in experts_at_step:
+                    for col in active_cols:
+                        active_keys.add((exp_id, col))
                 
                 if policy == "demand":
-                    # Demand loading (no caching)
                     missed = active_keys
                     total_misses += len(missed)
                     if missed:
@@ -173,10 +177,10 @@ def run_sota_baseline_comparison(
                         stall = max(0.0, (copy_time + LATENCY_OVERHEAD_PER_DMA_US) - COMPUTE_TIME_PER_LAYER_US)
                         total_stalls_us += stall
                 else:
-                    # Caching logic
-                    local_active = active_keys.intersection(cache.keys())
+                    local_active = {k for k in active_keys if k in cache}
                     missed = active_keys - local_active
                     
+                    # FIXED: only subtract prefetch hits if they were actually inserted into cache
                     pref_hits = set()
                     if policy in ["aaec_lru", "aaec_ls"] and l in current_prefetch_queue:
                         pref_hits = missed.intersection(current_prefetch_queue[l])
@@ -186,7 +190,6 @@ def run_sota_baseline_comparison(
                     total_hits += hits
                     total_misses += len(missed)
                     
-                    # Update cache
                     for key in active_keys:
                         if key in cache:
                             cache.move_to_end(key)
@@ -195,7 +198,6 @@ def run_sota_baseline_comparison(
                                 cache.popitem(last=False)
                             cache[key] = True
                             
-                    # Calculate stalls
                     if missed:
                         copy_size = len(missed) * COLUMN_SIZE_BYTES
                         copy_time = (copy_size / (link_bw_gb_s * 1e9)) * 1e6
@@ -206,12 +208,12 @@ def run_sota_baseline_comparison(
             # Prefetch logic
             current_prefetch_queue.clear()
             if idx < len(t_positions) - 1:
-                for l in range(NL):
+                for l in evaluation_db[p_id][t]:
                     if l == 0:
                         pred_exp = layer_0_most_frequent
                     else:
                         if (l-1) in evaluation_db[p_id][t]:
-                            prev_exp, _ = evaluation_db[p_id][t][l-1]
+                            prev_exp = evaluation_db[p_id][t][l-1][0][0]
                             if prev_exp < NE:
                                 pred_exp = int(np.argmax(transition_matrix[l, prev_exp]))
                             else:
@@ -222,24 +224,26 @@ def run_sota_baseline_comparison(
                     cache = gpu_caches[l]
                     
                     if policy == "aaec_ls" or policy == "aaec_lru":
-                        # Fetch column-level prefetch choices
                         temp_cols = prev_token_active_cols.get((l, pred_exp), set())
                         pred_cols_set = {(pred_exp, col) for col in temp_cols}
                         
-                        # Fallback static columns
                         static_cols = set([(pred_exp, col) for col in top_cols_per_expert[(l, pred_exp)][:cache_size]])
                         predicted_keys = pred_cols_set.union(static_cols)
                         
-                        missing = predicted_keys - cache.keys()
+                        missing = {k for k in predicted_keys if k not in cache}
                         if missing:
                             current_prefetch_queue[l] = missing
                             total_prefetched_bytes += len(missing) * COLUMN_SIZE_BYTES
+                            # FIXED: insert prefetched items into cache
+                            for key in missing:
+                                if len(cache) >= layer_capacity:
+                                    cache.popitem(last=False)
+                                cache[key] = True
                             
             # Update temporal history
             prev_token_active_cols.clear()
-            for l in range(NL):
-                if l in evaluation_db[p_id][t]:
-                    exp_id, active_cols = evaluation_db[p_id][t][l]
+            for l in evaluation_db[p_id][t]:
+                for exp_id, active_cols in evaluation_db[p_id][t][l]:
                     prev_token_active_cols[(l, exp_id)] = active_cols
                     
     hit_rate = total_hits / max(1, total_hits + total_misses)
@@ -275,7 +279,7 @@ def main():
                     "avg_stall_ms": res["avg_stall_ms"],
                     "total_transferred_gb": res["total_transferred_gb"]
                 })
-                print(f"    BW: {bw:<4.1f} GB/s | Hit Rate: {res['hit_rate']*100:.2f}% | Stall: {res['avg_stall_ms']:.4f} ms")
+                print(f"    BW: {bw:<4.1f} GB/s | Hit Rate: {res['hit_rate']*100:.2f}% | Stall: {res['avg_stall_ms']:.4f} ms | Data: {res['total_transferred_gb']:.2f} GB")
                 
         out_dir = f"/home/palakm/MoEServingSim/evaluation/results/e11_baselines/{model_name}"
         os.makedirs(out_dir, exist_ok=True)
