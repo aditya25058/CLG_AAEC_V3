@@ -11,7 +11,7 @@ The **Evolved AAEC v3 serving engine** resolves this timing fallacy by shifting 
 
 By operating at the fine granularity of **individual column packets (30.72 KB)** rather than monolithic experts (9.44 MB), AAEC v3 implements **Bandwidth-Budgeted Multi-Expert Speculative Prefetching (BMESP)**. AAEC reduces remote MoE communication by roughly an order of magnitude, converting a large communication bottleneck into a substantially smaller one through column-granular transfer and overlap. The union of speculative missed columns across multiple candidate experts is small enough to fit entirely within the attention hiding window, yielding highly latency-hiding decoding without model quality degradation.
 
-![AAEC v3 Pipeline Architecture Diagram](plots/architecture/aaec_pipeline_architecture.png)
+![AAEC v3 Pipeline Architecture Diagram](evaluation/plots/architecture/aaec_pipeline_architecture.png)
 
 ---
 
@@ -74,7 +74,7 @@ In distributed multi-node serving, where inter-node network latency dominates, t
 
 ## 4. Layer 3: Memory & Caching System
 
-![AAEC v3 Column-Granular Offloading vs Monolithic Offloading](plots/architecture/column_granular_offloading.png)
+![AAEC v3 Column-Granular Offloading vs Monolithic Offloading](evaluation/plots/architecture/column_granular_offloading.png)
 
 The memory and caching system manages physical storage layout, cache residency, and eviction policies:
 
