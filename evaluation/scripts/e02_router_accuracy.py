@@ -14,7 +14,7 @@ MODELS = {
     },
     "deepseek_v2_lite": {
         "db_path": "/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/deepseek_lite_real.db",
-        "num_layers": 26,
+        "num_layers": 27,
         "num_experts": 64,
         "top_k": 6
     }

@@ -1,7 +1,7 @@
 {
     "model_name": "mixtral_8x7b",
     "max_abs_diff": 0.0078125,
-    "mean_abs_diff": 0.000293731689453125,
-    "cosine_similarity": 0.9999960660934448,
+    "mean_abs_diff": 0.0002841949462890625,
+    "cosine_similarity": 0.9999490976333618,
     "verdict": "PASS"
 }
