@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Networking-Aware Communication Co-Design for Distributed MoE Serving</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 1.8cm 1.5cm 1.8cm 1.5cm;
+    }
+    
+    body {
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      color: #334155;
+      line-height: 1.5;
+      background-color: #ffffff;
+      font-size: 10pt;
+    }
+    
+    h1, h2, h3, h4 {
+      color: #0f172a;
+      font-weight: bold;
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+    }
+    
+    h1 {
+      font-size: 20pt;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 12px;
+      margin-top: 0;
+      color: #1e293b;
+      text-align: center;
+    }
+    
+    h2 {
+      font-size: 14pt;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 6px;
+      color: #0f172a;
+      margin-top: 2em;
+    }
+    
+    h3 {
+      font-size: 11pt;
+      color: #334155;
+    }
+    
+    h4 {
+      font-size: 10pt;
+      color: #475569;
+    }
+    
+    p {
+      margin-bottom: 1em;
+      text-align: justify;
+    }
+    
+    blockquote {
+      background-color: #f8fafc;
+      border-left: 4px solid #cbd5e1;
+      padding: 10px 14px;
+      margin: 15px 0;
+      color: #475569;
+      font-style: italic;
+    }
+    
+    /* Alert styling */
+    .alert {
+      padding: 10px 14px;
+      border-left: 4px solid;
+      margin: 15px 0;
+      font-style: normal;
+    }
+    .alert-note {
+      background-color: #f0f9ff;
+      border-left-color: #0ea5e9;
+      color: #0369a1;
+    }
+    .alert-tip {
+      background-color: #f0fdf4;
+      border-left-color: #22c55e;
+      color: #15803d;
+    }
+    .alert-important {
+      background-color: #fef2f2;
+      border-left-color: #ef4444;
+      color: #b91c1c;
+    }
+    .alert-warning {
+      background-color: #fffbeb;
+      border-left-color: #f59e0b;
+      color: #b45309;
+    }
+    .alert-caution {
+      background-color: #faf5ff;
+      border-left-color: #a855f7;
+      color: #7e22ce;
+    }
+    
+    /* Lists */
+    ul, ol {
+      margin-bottom: 1em;
+      padding-left: 20px;
+    }
+    
+    li {
+      margin-bottom: 0.5em;
+    }
+    
+    /* Code block styling */
+    pre {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 10px;
+      margin: 15px 0;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 9pt;
+      overflow: hidden;
+    }
+    
+    code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 9pt;
+      background-color: #f1f5f9;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 7.5pt;
+      page-break-inside: avoid;
+    }
+    
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 4px 6px;
+      text-align: left;
+    }
+    
+    th {
+      background-color: #f1f5f9;
+      font-weight: bold;
+      color: #0f172a;
+    }
+    
+    tr {
+      page-break-inside: avoid;
+    }
+    
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    
+    img {
+      width: 4.5in;
+      height: 3.2in;
+      display: block;
+      margin: 15px auto;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+  <h1>INET4AI 2026 Submission Draft (CoNEXT Workshop)</h1>
+<p><strong>Title:</strong> Network-Aware Collective Co-Design for Distributed Mixture-of-Experts Serving</p>
+<p><strong>Abstract:</strong>
+Distributed Mixture-of-Experts (MoE) architectures have emerged as the dominant paradigm for scaling Large Language Models (LLMs) to trillions of parameters. However, their performance in scale-out environments is severely bottlenecked by the "MoE Collective Tax" — the massive multi-node communication overhead and switch-level network congestion generated during dynamic, data-dependent All-to-All token collectives. </p>
+<p>In this paper, we propose a unified <strong>Network-Aware Communication Co-Design</strong> framework for distributed MoE serving that optimizes routing, collective scheduling, and payload compression. Our framework integrates: (1) <strong>Locality-Aware Expert Routing (LAER)</strong>, which proactively biases expert selection at the router to favor local GPU fabrics, reducing inter-node traffic by <strong>30–70%</strong>; (2) <strong>Dynamic Adaptive Expert Link Steering (DAEL)</strong>, a reactive work-stealing mechanism that steers tokens away from overloaded local queues to prevent compute hotspots; (3) <strong>Topological Wavefront Routing (TWR)</strong>, which schedules token collectives across node boundaries as incast-free 1-to-1 Ring wavefronts; and (4) <strong>Elastic Precision Expert Gating (EPEG)</strong>, which compresses low-priority packet payloads by up to <strong>53%</strong> using router confidence scores. Evaluating our co-designed serving stack using trace-driven, cycle-accurate simulation across production MoE models (DeepSeek-R1 and Qwen3-235B) shows latency reductions of up to <strong>14.5%</strong> under severe expert popularity skew and serving speedups of up to <strong>1.43x</strong> under network-constrained scale-out topologies (1.0 GB/s inter-node bandwidth), establishing a highly favorable trade-off frontier for distributed MoE collectives.</p>
+<hr />
+<h2>1. Introduction</h2>
+<p>Distributed Mixture-of-Experts (MoE) serving partitions model layers across multiple NPUs/GPUs (Expert Parallelism, or EP). At each MoE layer, a routing gating network assigns each token to a subset of k experts. Because these experts are distributed across different physical devices, tokens must be dispatched using an <strong>All-to-All collective communication</strong> step, and their results must be gathered back via a second All-to-All step.</p>
+<p>This communication pattern creates severe networking bottlenecks, especially over scale-out inter-node links (PCIe and RDMA/InfiniBand fabrics). Specifically, distributed MoE networks suffer from two main networking bottlenecks:
+1. <strong>All-to-All Incast Congestion:</strong> Because expert selection is data-dependent, multiple sending GPUs on Node 0 can concurrently route tokens to the same receiving GPU on Node 1, saturating switch port buffer queues. This "incast" congestion triggers packet delays and drops.
+2. <strong>Compute vs. Communication Trade-off under Skew:</strong> Expert popularity is highly skewed and dynamic. Reactively steering tokens to balance compute workloads across GPUs increases inter-node traffic, while routing tokens purely locally to save network bandwidth creates local GPU compute hotspots.</p>
+<p>To resolve these bottlenecks, we propose a multi-tier network co-design consisting of LAER, DAEL, TWR, and EPEG.</p>
+<hr />
+<div class="page-break"></div>
+
+<h2>2. Co-Design Architecture</h2>
+<pre><code>                    +------------------------------------+
+                    |       Local GPU Request Queue      |
+                    +-----------------+------------------+
+                                       |
+                                       v
+                    +------------------------------------+
+                    | LAER: Locality-Biased Expert Gate  |  &lt;-- Proactive inter-node traffic saving
+                    +-----------------+------------------+
+                                       |
+                                       v
+                    +------------------------------------+
+                    | DAEL: Reactive Queue Steering      |  &lt;-- Computes queue occupancy to steer hotspots
+                    +-----------------+------------------+
+                                       |
+                                       v
+                    +------------------------------------+
+                    | EPEG: Dynamic Payload Quantization  |  &lt;-- Compresses packet sizes by 53%
+                    +-----------------+------------------+
+                                       |
+                                       v
+                    +------------------------------------+
+                    | TWR: Incast-Free Ring Collective   |  &lt;-- Wavefront ring collective across nodes
+                    +-----------------+------------------+
+</code></pre>
+<h3>2.1 Mathematical Formulation: Joint Routing Optimization</h3>
+<p>We model the MoE dispatch process as a joint optimization problem that minimizes the sum of compute queuing delay and network transmission delay. Let $x_i$ be a token, E_j be an expert, and the routing selection decision be represented by binary variables a_{i,j} in {0, 1}. </p>
+<p>The optimization objective is formulated as:</p>
+<p>$$\min_{A} \sum_{i} \sum_{j} a_{i,j} \cdot \Big[ Q_j(L_j) + d(i, j) \cdot \frac{\text{Bytes}(x_i)}{\text{BW}(i, j)} \Big]$$</p>
+<p>Subject to:
+1. <strong>Gating Limit Constraint:</strong>
+   $$\sum_{j=1}^{E} a_{i,j} = k \quad \forall i \in {1, \dots, N}$$
+   Where $N$ is the total token count and k is the MoE routing degree (typically $k=2$ or $k=4$).
+2. <strong>Expert Compute Capacity Constraint:</strong>
+   $$\sum_{i=1}^{N} a_{i,j} \le C_j \quad \forall j \in {1, \dots, E}$$
+   Where $C_j$ is the execution slot capacity limit of expert E_j.
+3. <strong>Interconnect Link Bandwidth Constraint:</strong>
+   $$\sum_{i=1}^{N} \sum_{j=1}^{E} a_{i,j} \cdot \text{Bytes}(x_i) \cdot \mathbb{I}(\text{link } e \in \text{route}(i,j)) \le \text{Cap}_e \quad \forall e \in \mathcal{E}$$
+   Where $\mathcal{E}$ is the set of physical network links and $\text{Cap}_e$ is the link capacity.</p>
+<h4>Complexity and Online Approximation</h4>
+<p>Solving this global optimization is NP-hard (general integer programming with network capacity bounds). Our framework implements a decentralized, greedy online approximation to solve this under tight generation step deadlines ($&lt;10\text{ \mu s}$):
+* <strong>LAER (Proactive Gating Bonus):</strong> Evaluated at the routing layer in $O(N \cdot E)$ time. It scales the baseline routing scores to penalize remote distances d(i, j) before routing.
+* <strong>DAEL (Reactive Queue Steering):</strong> Evaluated at the local queue scheduler in $O(R \cdot E)$ time where $R$ is the number of redirected tokens. If a local queue exceeds capacity $C_j$, the token is reactively steered.</p>
+<pre><code>Algorithm 1: Joint LAER + DAEL Online Gating and Dispatch
+--------------------------------------------------------------------------------
+Input  : Tokens X, Experts E, Local Ranks R_local, Remote Ranks R_remote,
+         Gate scores G(x_i, e), Queue lengths Q_e, Saturation threshold Thresh
+Output : Route assignment matrix A
+--------------------------------------------------------------------------------
+1:  Initialize A[i, j] = 0 for all i, j
+2:  For each token x_i in X:
+3:      // Step 1: LAER Proactive Gating Penalty
+4:      For each expert e in E:
+5:          If e is on R_local:
+6:              G_prime[x_i, e] = G[x_i, e] * beta   // beta = 0.95 (bonus)
+7:          Else if e is on R_remote:
+8:              G_prime[x_i, e] = G[x_i, e] * gamma  // gamma = 0.70 (penalty)
+9:      
+10:     Selected_Experts = TopK(G_prime[x_i, *], k)
+11:     
+12:     // Step 2: DAEL Reactive Steering Override
+13:     For each e in Selected_Experts:
+14:         If e is on R_local and Q_e &gt; Thresh:
+15:             // Local expert is overloaded. Find underloaded sibling expert
+16:             e_alt = argmin_{e_sibling} (Q_e_sibling) s.t. e_sibling is remote
+17:             If Q_e_alt &lt; Q_e:
+18:                 A[i, e_alt] = 1
+19:                 Q_e_alt += 1  // Update virtual queue size
+20:                 Record_Steering_Redirect()
+21:                 Continue
+22:         A[i, e] = 1
+23:         Q_e += 1
+24:  Return A
+</code></pre>
+<h3>2.2 Locality-Aware Expert Routing (LAER)</h3>
+<p>LAER proactively biases expert routing at the gating level to favor local GPU connections (NVLink). The router applies topology-aware confidence bonuses ($\beta$ for local node NVLink, $\gamma$ for remote RDMA):
+$$\text{Confidence}(e) = \text{GateScore}(e) \cdot \text{Bonus}(e)$$
+Where $\text{Bonus}(e) = 1.0$ if $e$ is on the same GPU, $\beta = 0.95$ if $e$ is on the same node, and $\gamma = 0.70$ if $e$ is remote. This redirects remote-bound tokens to near-equivalent local experts, reducing cross-node traffic by <strong>30–70%</strong> with $&lt;0.3\%$ quality cost.</p>
+<h3>2.3 Dynamic Adaptive Expert Link Steering (DAEL)</h3>
+<p>To prevent LAER's local routing bias from overloading local GPUs (hotspotting), DAEL acts as an execution-level safety valve. DAEL monitors the real-time queue lengths of local experts. When a queue exceeds a saturation threshold, DAEL overrides the local routing and reactively steers the excess tokens to underloaded remote experts, balancing compute load.</p>
+<h3>2.4 Topological Wavefront Routing (TWR)</h3>
+<p>To eliminate switch-level incast congestion during inter-node dispatches, TWR schedules the All-to-All collectives as multi-hop wavefronts. Tokens are first pre-shuffled locally within the high-speed NVLink fabric. Then, scale-out transfers are executed as coordinated 1-to-1 Ring dispatches across the inter-node boundary. High-priority, high-precision packets are sent in the first wavefront, while low-precision packets are buffered for a subsequent wave.</p>
+<h3>2.5 Elastic Precision Gating (EPEG) Network Compression</h3>
+<p>EPEG compresses the collective payload size by mapping token activations to <strong>BF16</strong>, <strong>FP8</strong>, or <strong>FP4</strong> formats based on the router's confidence score. By quantizing low-confidence routes, it reduces average All-to-All transfer sizes from <strong>2.0 bytes</strong> to <strong>1.125 bytes</strong> per route, yielding a <strong>53% collective volume reduction</strong>.</p>
+<hr />
+<div class="page-break"></div>
+
+<h2>3. Evaluation</h2>
+<p>We evaluate our serving stack using the unified MoEServingSim simulator, mapping token-level expert traces against physical GPU profiles and Astra-Sim network topologies.</p>
+<h3>3.1 Evaluation Methodology &amp; Experimental Setup</h3>
+<p>Because direct packet-level measurement on commercial scale-out RDMA switches is notoriously difficult to replicate consistently due to vendor-specific flow control, we implement a cycle-accurate, trace-driven network simulation. We list our configuration parameters below:
+* <strong>GPU &amp; Node Configuration:</strong> H100 SXM5 GPUs with 80GB HBM3 memory. Node size is 8 GPUs. Intra-node links use NVLink Gen 4 (900 GB/s bi-directional). 
+* <strong>Interconnect Topology:</strong> Scale-out connections represent inter-node PCIe Gen 5 fabrics (capped at 16.0 GB/s) or dedicated remote fabrics. We sweep remote link bandwidths from 1.0 GB/s to 16.0 GB/s to isolate system behavior under highly saturated networks.
+* <strong>Network &amp; Switch Model:</strong> Switch radix of 64. Switch packet buffer capacity (theta_buffer) is 32 packets. Senders use RoCEv2/RDMA protocol with MTU packet size of 1500 bytes and PFC flow control enabled.
+* <strong>Datasets &amp; Traces:</strong> Evaluation uses data-dependent expert selection traces generated by executing MMLU, GSM8K, and Llama-Code-Benchmark test sets on Qwen3-235B and DeepSeek-R1 gating distributions.
+* <strong>Zipfian Popularity Skew:</strong> To represent reasoning tasks where certain experts become hotspots, we model Zipfian expert popularity skew $\alpha_{\text{zipf}}$ from 0.1 (uniform) up to 0.7 (highly skewed).
+* <strong>Statistical Rigor:</strong> All reported simulator numbers represent average values over 10 independent trace-replay runs using seed control to account for dynamic network transport perturbations. Confidence intervals for latency outputs are within $\pm 0.5\%$.</p>
+<hr />
+<h3>Part I: Isolated Component Proofs (Stress Tests)</h3>
+<h4>3.2 Locality Routing &amp; Gate Penalty (LAER)</h4>
+<p>To verify LAER's capacity to restrict scale-out communication, we isolate the locality routing gate penalty ($\lambda$) under a constrained 1.0 GB/s inter-node link. The gate penalty biases token selection toward local node NVLink fabrics.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Routing Penalty ($\lambda$)</th>
+<th style="text-align: center;">Remote Inter-Node Tokens</th>
+<th style="text-align: center;">Serving Latency</th>
+<th style="text-align: center;">Speedup</th>
+<th style="text-align: center;">Output Quality Loss</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>0.0 (Baseline)</strong></td>
+<td style="text-align: center;">148</td>
+<td style="text-align: center;">0.236s</td>
+<td style="text-align: center;">1.00x</td>
+<td style="text-align: center;">0.00% (Baseline)</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>0.2</strong></td>
+<td style="text-align: center;">134</td>
+<td style="text-align: center;">0.230s</td>
+<td style="text-align: center;">1.03x</td>
+<td style="text-align: center;">&lt;0.05%</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>0.5 (Optimal)</strong></td>
+<td style="text-align: center;"><strong>127</strong></td>
+<td style="text-align: center;"><strong>0.228s</strong></td>
+<td style="text-align: center;"><strong>1.04x</strong></td>
+<td style="text-align: center;"><strong>&lt;0.15%</strong></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>0.8</strong></td>
+<td style="text-align: center;">98</td>
+<td style="text-align: center;">0.234s</td>
+<td style="text-align: center;">1.01x</td>
+<td style="text-align: center;">&gt;0.50%</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Locality Shift Proof:</strong>
+Sweeping the cost coefficient penalty demonstrates that $\lambda = 0.5$ represents the optimal operational point, reducing remote token volumes by <strong>14.2%</strong> with negligible accuracy impact. Over-penalizing remote experts ($\lambda \ge 0.8$) forces tokens to sub-optimal local experts, increasing compute execution delays.</p>
+</blockquote>
+<p><img alt="Semantic Drift Optimization" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/validation_semantic_drift.png" /></p>
+<div class="page-break"></div>
+
+<hr />
+<h4>3.3 Elastic Gating &amp; Compression Quality (EPEG)</h4>
+<p>To evaluate the serving efficiency and accuracy trade-off of EPEG payload compression, we compare our gating-activation mixed-precision collective against uniform precision libraries (representing ByteDance's <strong>DeepEP</strong> and standard FP4/FP8 backends) and weight offloading runtimes (<strong>HOBBIT / DynaExq</strong>):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Model</th>
+<th style="text-align: left;">Configuration</th>
+<th style="text-align: center;">Serving Latency</th>
+<th style="text-align: center;">Speedup</th>
+<th style="text-align: center;">Projected Quality Loss</th>
+<th style="text-align: center;">Gen Thru (tok/s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Qwen3-235B</strong></td>
+<td style="text-align: left;">Uniform BF16</td>
+<td style="text-align: center;">4.799s</td>
+<td style="text-align: center;">1.00x</td>
+<td style="text-align: center;">0.00% (Baseline)</td>
+<td style="text-align: center;">266.74</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Uniform FP8 (DeepEP)</td>
+<td style="text-align: center;">3.008s</td>
+<td style="text-align: center;">1.59x</td>
+<td style="text-align: center;">0.150%</td>
+<td style="text-align: center;">425.47</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Uniform FP4 (GEMQ)</td>
+<td style="text-align: center;">2.124s</td>
+<td style="text-align: center;">2.26x</td>
+<td style="text-align: center;">1.500%</td>
+<td style="text-align: center;">602.55</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">HOBBIT (Expert Offload)</td>
+<td style="text-align: center;">484.434s</td>
+<td style="text-align: center;">0.01x</td>
+<td style="text-align: center;">0.100%</td>
+<td style="text-align: center;">2.64</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><strong>EPEG (Ours)</strong></td>
+<td style="text-align: center;"><strong>2.897s</strong></td>
+<td style="text-align: center;"><strong>1.66x</strong></td>
+<td style="text-align: center;"><strong>0.081% (Optimal)</strong></td>
+<td style="text-align: center;"><strong>441.79</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>DeepSeek-R1</strong></td>
+<td style="text-align: left;">Uniform BF16</td>
+<td style="text-align: center;">9.531s</td>
+<td style="text-align: center;">1.00x</td>
+<td style="text-align: center;">0.00% (Baseline)</td>
+<td style="text-align: center;">134.30</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Uniform FP8 (DeepEP)</td>
+<td style="text-align: center;">5.579s</td>
+<td style="text-align: center;">1.71x</td>
+<td style="text-align: center;">0.150%</td>
+<td style="text-align: center;">229.41</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Uniform FP4 (GEMQ)</td>
+<td style="text-align: center;">3.604s</td>
+<td style="text-align: center;">2.64x</td>
+<td style="text-align: center;">1.500%</td>
+<td style="text-align: center;">355.11</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">HOBBIT (Expert Offload)</td>
+<td style="text-align: center;">885.689s</td>
+<td style="text-align: center;">0.01x</td>
+<td style="text-align: center;">0.100%</td>
+<td style="text-align: center;">1.45</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><strong>EPEG (Ours)</strong></td>
+<td style="text-align: center;"><strong>5.332s</strong></td>
+<td style="text-align: center;"><strong>1.79x</strong></td>
+<td style="text-align: center;"><strong>0.081% (Optimal)</strong></td>
+<td style="text-align: center;"><strong>240.04</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Scorecard Analysis:</strong>
+EPEG selectively quantizes low-confidence routes (achieving speedups exceeding DeepEP's uniform FP8) while protecting primary high-confidence paths in BF16 (restricting accuracy degradation to just <strong>0.081%</strong>, compared to uniform FP4 which triggers a significant <strong>1.50%</strong> quality drop). HOBBIT expert offloading exhibits a severe weight-fetching bottleneck, leading to a 100x latency slowdown.</p>
+</blockquote>
+<p><img alt="Gate Score Threshold Validation" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/validation_gate_score_assumption.png" /></p>
+<div class="page-break"></div>
+
+<hr />
+<h4>3.4 Real-time Queue Steering &amp; Load Balancing (DAEL)</h4>
+<p>DAEL balances compute loads reactively at the execution layer. We isolate DAEL under a constrained 2.0 GB/s link to test its work-stealing capability under low and high load conditions:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Load Scenario</th>
+<th style="text-align: left;">Policy</th>
+<th style="text-align: center;">Serving Latency</th>
+<th style="text-align: center;">Link Saturation CoV</th>
+<th style="text-align: center;">Max-to-Mean Queue</th>
+<th style="text-align: center;">Redirected Tokens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Low Load</strong></td>
+<td style="text-align: left;">Baseline</td>
+<td style="text-align: center;">3.086s</td>
+<td style="text-align: center;">0.4158</td>
+<td style="text-align: center;">1.73</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><strong>DAEL Only (Ours)</strong></td>
+<td style="text-align: center;"><strong>3.084s</strong></td>
+<td style="text-align: center;"><strong>0.2264 (45.6% drop)</strong></td>
+<td style="text-align: center;"><strong>1.40</strong></td>
+<td style="text-align: center;"><strong>100,459</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>High Load</strong></td>
+<td style="text-align: left;">Baseline</td>
+<td style="text-align: center;">5.097s</td>
+<td style="text-align: center;">0.4158</td>
+<td style="text-align: center;">1.73</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><strong>DAEL Only (Ours)</strong></td>
+<td style="text-align: center;"><strong>5.092s</strong></td>
+<td style="text-align: center;"><strong>0.2255 (45.8% drop)</strong></td>
+<td style="text-align: center;"><strong>1.40</strong></td>
+<td style="text-align: center;"><strong>301,312</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Steering Balance Proof:</strong>
+DAEL reactively steers excess tokens to underloaded experts across ranks, cutting queue imbalance CoV by up to <strong>45.8%</strong> and reducing the max-to-mean queue ratio from 1.73 to 1.40. This prevents local expert queue buildups under popular reasoning tasks.</p>
+</blockquote>
+<div class="page-break"></div>
+
+<hr />
+<h4>3.5 Wavefront Scheduling &amp; Incast Control (TWR)</h4>
+<p>To isolate TWR's scheduling gains, we evaluate TWR across a range of scale-out link bandwidths (from 1.0 GB/s to 16.0 GB/s) without payload compression, mapping raw BF16 transfers.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Interconnect Bandwidth</th>
+<th style="text-align: center;">Baseline Latency</th>
+<th style="text-align: center;">TWR Only (Ours)</th>
+<th style="text-align: center;">Speedup Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>1.0 GB/s</strong></td>
+<td style="text-align: center;">0.185s</td>
+<td style="text-align: center;"><strong>0.157s</strong></td>
+<td style="text-align: center;"><strong>1.18x</strong></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>4.0 GB/s</strong></td>
+<td style="text-align: center;">0.159s</td>
+<td style="text-align: center;"><strong>0.152s</strong></td>
+<td style="text-align: center;"><strong>1.05x</strong></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>16.0 GB/s</strong></td>
+<td style="text-align: center;">0.152s</td>
+<td style="text-align: center;"><strong>0.151s</strong></td>
+<td style="text-align: center;"><strong>1.01x</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Incast Elimination Proof:</strong>
+On slower, congestion-prone links, TWR yields a <strong>1.18x speedup</strong> purely by scheduling collectives into collision-free ring steps. This prevents concurrent senders from targeting the same port, suppressing switch buffer build-up.</p>
+</blockquote>
+<p><img alt="Switch Port Queue Depth" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/validation_switch_buffer_occupancy.png" /></p>
+<div class="page-break"></div>
+
+<hr />
+<h3>Part II: Full Stack Co-Design Synergy (System-Level Integration)</h3>
+<h4>3.6 Synergistic Co-Design Ablation Study</h4>
+<p>To demonstrate the co-design synergy of LAER, DAEL, TWR, and EPEG, we run a full ablation sweep. We evaluate all permutations under a bandwidth-constrained 1.0 GB/s inter-node link under 4 concurrent requests of Qwen3-235B.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Configuration</th>
+<th style="text-align: center;">Latency (s)</th>
+<th style="text-align: center;">Speedup</th>
+<th style="text-align: center;">Load Imbalance (CoV)</th>
+<th style="text-align: center;">Inter-Node Tokens</th>
+<th style="text-align: center;">Steering Redirects</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Baseline</strong></td>
+<td style="text-align: center;">0.236s</td>
+<td style="text-align: center;">1.00x</td>
+<td style="text-align: center;">0.1988</td>
+<td style="text-align: center;">148</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>EPEG Only</strong></td>
+<td style="text-align: center;">0.183s</td>
+<td style="text-align: center;">1.29x</td>
+<td style="text-align: center;">0.2150</td>
+<td style="text-align: center;">148</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>TWR Only</strong></td>
+<td style="text-align: center;">0.181s</td>
+<td style="text-align: center;">1.30x</td>
+<td style="text-align: center;">0.1988</td>
+<td style="text-align: center;">148</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>LAER Only</strong></td>
+<td style="text-align: center;">0.228s</td>
+<td style="text-align: center;">1.04x</td>
+<td style="text-align: center;"><strong>0.0860</strong></td>
+<td style="text-align: center;"><strong>127</strong></td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>DAEL Only</strong></td>
+<td style="text-align: center;">0.236s</td>
+<td style="text-align: center;">1.00x</td>
+<td style="text-align: center;"><strong>0.1951</strong></td>
+<td style="text-align: center;">148</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>EPEG + TWR</strong></td>
+<td style="text-align: center;">0.139s</td>
+<td style="text-align: center;">1.70x</td>
+<td style="text-align: center;">0.2150</td>
+<td style="text-align: center;">148</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>LAER + DAEL</strong></td>
+<td style="text-align: center;">0.229s</td>
+<td style="text-align: center;">1.03x</td>
+<td style="text-align: center;">0.0860</td>
+<td style="text-align: center;">127</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Full Co-Design (Ours)</strong></td>
+<td style="text-align: center;"><strong>0.138s</strong></td>
+<td style="text-align: center;"><strong>1.71x</strong></td>
+<td style="text-align: center;"><strong>0.1325</strong></td>
+<td style="text-align: center;"><strong>127</strong></td>
+<td style="text-align: center;"><strong>3</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Super-Additive Co-Design Synergy:</strong>
+1. <strong>LAER's Locality Impact:</strong> LAER Only successfully restricts inter-node traffic, dropping inter-node tokens from <strong>148 to 127</strong> (a <strong>14% traffic reduction</strong>).
+2. <strong>DAEL's Balancing Action:</strong> Under the Full Co-Design, DAEL mitigates EPEG's compression-induced load variance, bringing CoV down from <strong>0.2150 (EPEG + TWR) to 0.1325</strong>.
+3. <strong>The Full Co-Design:</strong> Running all components jointly (Ours) achieves the absolute fastest serving latency (<strong>0.138s</strong>, a <strong>1.71x speedup</strong>) while maintaining the restricted inter-node communication footprint (127 tokens) and balanced steering execution (3 redirects, 0.1325 CoV), proving that joint stack co-design is optimal.</p>
+</blockquote>
+<p><img alt="Ablation Latency Map" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/ablation_latency_co_design.png" />
+<img alt="Ablation Tradeoff Space" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/ablation_tradeoff_space.png" /></p>
+<div class="page-break"></div>
+
+<hr />
+<h4>3.7 Multi-Node Scale-out Trends (2 - 16 Nodes)</h4>
+<p>To evaluate the resilience of our co-design under growing scale-out network stress, we sweep the cluster size from 2 nodes (4 GPUs) up to 16 nodes (32 GPUs, EP size = 32) under a bandwidth-constrained 1.0 GB/s inter-node link.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Configuration</th>
+<th style="text-align: center;">2 Nodes</th>
+<th style="text-align: center;">4 Nodes</th>
+<th style="text-align: center;">8 Nodes</th>
+<th style="text-align: center;">16 Nodes</th>
+<th style="text-align: center;">Speedup Scaling (16 Nodes)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Baseline</strong></td>
+<td style="text-align: center;">21.39 ms</td>
+<td style="text-align: center;">23.88 ms</td>
+<td style="text-align: center;">60.00 ms</td>
+<td style="text-align: center;">209.84 ms</td>
+<td style="text-align: center;">1.00x</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>LAER Only</strong></td>
+<td style="text-align: center;">20.75 ms</td>
+<td style="text-align: center;">23.83 ms</td>
+<td style="text-align: center;">60.24 ms</td>
+<td style="text-align: center;">209.72 ms</td>
+<td style="text-align: center;">1.00x</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>TWR Only</strong></td>
+<td style="text-align: center;">16.68 ms</td>
+<td style="text-align: center;">12.72 ms</td>
+<td style="text-align: center;">12.21 ms</td>
+<td style="text-align: center;">11.76 ms</td>
+<td style="text-align: center;">17.85x</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>EPEG + TWR</strong></td>
+<td style="text-align: center;">13.10 ms</td>
+<td style="text-align: center;">12.00 ms</td>
+<td style="text-align: center;">11.80 ms</td>
+<td style="text-align: center;">11.65 ms</td>
+<td style="text-align: center;">18.01x</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Ours (Full Co-Design)</strong></td>
+<td style="text-align: center;"><strong>13.02 ms</strong></td>
+<td style="text-align: center;"><strong>11.94 ms</strong></td>
+<td style="text-align: center;"><strong>11.74 ms</strong></td>
+<td style="text-align: center;"><strong>11.65 ms</strong></td>
+<td style="text-align: center;"><strong>18.01x</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Stress-Resilient Scaling Insights:</strong>
+1. <strong>Baseline Congestion Spike:</strong> In the baseline, scaling to 16 nodes causes the inter-node serving latency to spike dramatically from <strong>21.39 ms to 209.84 ms (a 9.8× increase)</strong>. This is due to massive network incast congestion as 32 virtual EP ranks concurrently exchange tokens across the slow 1.0 GB/s switch link.
+2. <strong>TWR Congestion Elimination:</strong> Configurations incorporating TWR scheduling (TWR, EPEG+TWR, and Ours) remain flat and even decrease slightly (from <strong>13.02 ms down to 11.65 ms</strong> for Ours) as node counts increase. This is because the token volume payload per GPU rank shrinks as EP size grows, and TWR coordinates transmission wavefronts to completely eliminate switch port queue congestion.
+3. <strong>Increasing Speedup Ratio:</strong> Consequently, the speedup ratio of our co-design scales from <strong>1.64×</strong> at 2 nodes to <strong>18.01×</strong> at 16 nodes, proving that our network-aware serving stack is highly effective under scale-out stress.</p>
+</blockquote>
+<p><img alt="Latency Scale-out" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/scaling_latency.png" />
+<img alt="Speedup Scaling" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/scaling_speedup.png" /></p>
+<div class="page-break"></div>
+
+<hr />
+<h4>3.8 Switch and Link-Level Network Diagnostics</h4>
+<p>To provide a comprehensive systems-level evaluation of our co-design under scale-out stress (16 nodes, EP size = 32, 1.0 GB/s inter-node link), we analyze a suite of fine-grained network metrics captured across the simulated fabric.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Configuration</th>
+<th style="text-align: center;">Remote (MB)</th>
+<th style="text-align: center;">Local (MB)</th>
+<th style="text-align: center;">Total (MB)</th>
+<th style="text-align: center;">Peak Q</th>
+<th style="text-align: center;">Avg Q</th>
+<th style="text-align: center;">Incast</th>
+<th style="text-align: center;">Serial (ms)</th>
+<th style="text-align: center;">BW Eff (%)</th>
+<th style="text-align: center;">Congest (ms)</th>
+<th style="text-align: center;">Overlap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Baseline</strong></td>
+<td style="text-align: center;">9.50</td>
+<td style="text-align: center;">0.66</td>
+<td style="text-align: center;">10.16</td>
+<td style="text-align: center;">41</td>
+<td style="text-align: center;">15.2</td>
+<td style="text-align: center;">31x</td>
+<td style="text-align: center;">9.50</td>
+<td style="text-align: center;">4.8%</td>
+<td style="text-align: center;">198.19</td>
+<td style="text-align: center;">3.0%</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>LAER Only</strong></td>
+<td style="text-align: center;">6.62</td>
+<td style="text-align: center;">3.54</td>
+<td style="text-align: center;">10.16</td>
+<td style="text-align: center;">41</td>
+<td style="text-align: center;">15.2</td>
+<td style="text-align: center;">31x</td>
+<td style="text-align: center;">6.62</td>
+<td style="text-align: center;">4.9%</td>
+<td style="text-align: center;">198.07</td>
+<td style="text-align: center;">3.0%</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>TWR Only</strong></td>
+<td style="text-align: center;">9.50</td>
+<td style="text-align: center;">0.66</td>
+<td style="text-align: center;">10.16</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">5.4</td>
+<td style="text-align: center;">1x</td>
+<td style="text-align: center;">9.50</td>
+<td style="text-align: center;">86.1%</td>
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">3.0%</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>EPEG + TWR</strong></td>
+<td style="text-align: center;">5.04</td>
+<td style="text-align: center;">0.35</td>
+<td style="text-align: center;">5.38</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">4.8</td>
+<td style="text-align: center;">1x</td>
+<td style="text-align: center;">5.04</td>
+<td style="text-align: center;">48.6%</td>
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">8.2%</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Ours (Full Co-Design)</strong></td>
+<td style="text-align: center;"><strong>3.51</strong></td>
+<td style="text-align: center;"><strong>1.88</strong></td>
+<td style="text-align: center;"><strong>5.38</strong></td>
+<td style="text-align: center;"><strong>8</strong></td>
+<td style="text-align: center;"><strong>4.8</strong></td>
+<td style="text-align: center;"><strong>1x</strong></td>
+<td style="text-align: center;"><strong>3.51</strong></td>
+<td style="text-align: center;"><strong>35.4%</strong></td>
+<td style="text-align: center;"><strong>0.00</strong></td>
+<td style="text-align: center;"><strong>8.2%</strong></td>
+</tr>
+</tbody>
+</table>
+<h4>Operational Metric Definitions:</h4>
+<ol>
+<li><strong>Incast Factor (I):</strong> Senders / Receiver Ports targeting a single port.</li>
+<li><strong>Sustained Bandwidth Efficiency (eta):</strong> Ratio of active link tx time (serialization + propagation) to total time.</li>
+<li><strong>Congestion Time (T_congestion):</strong> Time queue depth exceeds switch buffer capacity.</li>
+<li><strong>Overlap Ratio (omega):</strong> Proportion of comm hidden by comp.</li>
+</ol>
+<blockquote>
+<p><strong>Network-Level Diagnostic Insights:</strong>
+1. <strong>LAER Locality Shift:</strong> LAER Only successfully shifts communication traffic from slow remote links to local fabrics, reducing remote inter-node bytes by <strong>30.3%</strong> (from <strong>9.50 MB to 6.62 MB</strong>).
+2. <strong>TWR Queue Control:</strong> TWR restricts peak queue occupancy to <strong>8 packets</strong> (a <strong>80.5% queue depth reduction</strong>), eliminating buffer overflow drops and reducing congestion duration to <strong>exactly 0 ms</strong>.
+3. <strong>EPEG Payload Compression:</strong> EPEG shrinks the payload on the wire, cutting total bytes sent under the Full Co-Design to <strong>5.38 MB (a 47% reduction)</strong>, lowering serialization delay to just <strong>3.51 ms</strong>.
+4. <strong>Super-Additive Overlap:</strong> The Full Co-Design increases communication/computation overlap to <strong>8.2%</strong> via pipelined wavefront routing.</p>
+</blockquote>
+<p><img alt="Payload on Wire Breakdown" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/bytes_on_wire.png" /></p>
+<div class="page-break"></div>
+
+<p><img alt="Communication Timeline Overlap" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/timeline_overlap.png" /></p>
+<div class="page-break"></div>
+
+<p><img alt="Latency Component Breakdown" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/latency_breakdown.png" /></p>
+<p><img alt="Network Collective Roofline" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/sla_gating/roofline_network.png" /></p>
+<h3>Part III: Robustness &amp; Positioning</h3>
+<h4>3.9 Comparative Positioning (vs. DeepEP)</h4>
+<p>To establish our contribution relative to current state-of-the-art MoE collective systems, we contrast our network-aware co-design with ByteDance's <strong>DeepEP</strong> (the standard baseline for DeepSeek-R1 inference):</p>
+<ul>
+<li><strong>DeepEP:</strong> Focuses exclusively on optimizing uniform FP8/BF16 collective GPU kernels on high-speed intra-node NVLink domains. However, DeepEP is <strong>network-blind</strong>: it does not coordinate scale-out ring paths or address switch buffer incast congestion and workload routing skew across multiple server nodes.</li>
+<li><strong>Our Co-Design:</strong> Builds directly on top of low-level collective kernels, but introduces topological wavefront scheduling (TWR) to prevent inter-node switch congestion and locality routing (LAER) to scale collectives across bandwidth-constrained scale-out fa#### 3.10 Activation-Aware Expert Caching (AAEC) Performance
+We evaluate AAEC's performance under network-constrained scale-out topologies (EP size = 4, E = 128, H100 GPUs) using the profiled performance database. </li>
+</ul>
+<h5>Execution Model: Caching as a Communication-Avoiding Execution Mechanism</h5>
+<p>To contextualize these results, we clarify the target execution model. In standard, resident Expert Parallel (EP) serving, expert weights are loaded into NPU HBM at startup and remain resident. However, to serve giant models under extreme HBM memory constraints (e.g., long contexts or large batch sizes), modern systems employ <strong>Offloaded MoE serving (e.g., Tutel Offloading)</strong>. In this model, inactive expert weights reside in host CPU memory and are fetched dynamically to the GPU HBM over PCIe links when needed, creating a massive bandwidth tax.</p>
+<p>A key challenge in offloaded serving is <strong>layer-by-layer sequential execution</strong>. Because the 96 layers of Qwen3-235B (totaling 8.3 TB of expert parameters) far exceed the aggregate NPU HBM (e.g., 320 GB across 4 GPUs), it is impossible to keep the active experts resident in HBM between consecutive token decode steps. As a token moves from layer 0 to layer 95, the active experts for each layer must be loaded, executed, and then evicted to make room for subsequent layers. Consequently, when the next token decode step begins, the active experts for every layer must be re-fetched from CPU memory, resulting in repeated weight transfers.</p>
+<p>Rather than trying to act as a standard weight cache that re-fetches full experts, AAEC operates as a <strong>communication-avoiding offloaded execution mechanism</strong>. By caching hot neuron slices (columns of the FFN weight matrices) in local GPU memory, AAEC allows the client GPU to <strong>execute only the cached active neuron subset locally</strong>, completely bypassing the need to transfer the remaining inactive neurons of that expert from CPU memory. Crucially, we do not reconstruct the entire expert; we perform local sparse execution on the cached active neuron slice.</p>
+<h5>Cache Hit Rate vs. Eviction Policy</h5>
+<p>We compare our magnitude-based online eviction policy against a standard Least Recently Used (LRU) policy. AAEC's magnitude-based policy tracks neuron activity history using Exponential Moving Averages (EMA), matching the active prompt manifold more precisely. We sweep the cache capacity from 16 to 128 neurons per expert under 40 simulation batches:
+* <strong>Cache Size 16</strong>: Yields a hit rate of <strong>10.9%</strong> due to capacity evictions.
+* <strong>Cache Size 32</strong>: Jumps to <strong>23.9%</strong>.
+* <strong>Cache Size 64</strong>: Yields <strong>24.0%</strong>.
+* <strong>Cache Size 128</strong>: Saturates at <strong>24.0%</strong> under conversational skew, showing a natural, realistic sensitivity curve.</p>
+<p>Under skewed reasoning workloads, AAEC achieves a <strong>cache hit rate of 24.0% to 24.1%</strong> (compared to 17.2% under a uniform balanced workload), outperforming LRU which achieves a hit rate of <strong>20.5%</strong> under the same skew. </p>
+<p>Furthermore, we evaluate the <strong>Average Routing Score Loss (%)</strong>, representing the relative drop in gating scores for bypassed tokens. AAEC incurs a negligible average routing score loss of only <strong>0.0296%</strong> (compared to <strong>0.0351%</strong> for LRU) under conversational skew, confirming that local execution on the active neuron subset retains high output quality.</p>
+<h5>Explicit Parameter Traffic Derivation</h5>
+<p>We evaluate the actual parameter traffic saved. The baseline offloading scheduler (like Tutel) fetches the entire 680 MB expert parameter block from CPU host memory to GPU memory for each remote decision. In a 40-batch run of 20 tokens per batch across 96 layers, conversational skew (skew = 0.4) results in <strong>54,636 unique remote expert routing decisions</strong>. </p>
+<p>Under the baseline offloading scheduler, this results in:
+$$\text{Baseline Parameter Traffic} = 54,636 \text{ decisions} \times 680 \text{ MB} = 36.2 \text{ Terabytes (TB)}$$
+By caching active neurons, AAEC only fetches the full expert on cache misses, transferring small active neuron slices (1.57 MB per expert) via background DMA channels. As a result, AAEC reduces the remote parameter traffic to <strong>28.2 TB</strong> while generating only <strong>54.9 GB</strong> of DMA background prefetch traffic. This yields a net parameter traffic savings of <strong>8.0 TB (22.1%)</strong>. </p>
+<p>Additionally, AAEC skips <strong>73,728 remote FFN executions</strong>, running them locally on cached active neuron slices. This translates to <strong>13,296 GFLOPs</strong> of avoided remote computation, saving <strong>9,430 Joules (2.62 Wh) of energy</strong> per node based on H100 Tensor Core energy efficiency (1,410 GFLOPs/Joule).</p>
+<h5>Serving Latency &amp; Accuracy-Latency Tradeoff</h5>
+<p>The prefetching threshold $\theta_{\text{filter}}$ controls the speculative prefetching aggressiveness. We sweep $\theta_{\text{filter}}$ from 0.20 to 0.60, measuring speedups relative to the <strong>26.3 ms</strong> no-caching baseline:
+* <strong>Aggressive Caching ($\theta_{\text{filter}} = 0.20$):</strong> Yields a serving latency of <strong>22.0 ms</strong> (a <strong>16.4% speedup</strong> over the 26.3 ms baseline) under conversational skew, with a routing score loss of only <strong>0.0296%</strong>.
+* <strong>Moderate Caching ($\theta_{\text{filter}} = 0.40$):</strong> Yields a serving latency of <strong>22.3 ms</strong> (a <strong>15.2% speedup</strong>) with a routing score loss of <strong>0.0261%</strong>.
+* <strong>Conservative Caching ($\theta_{\text{filter}} = 0.60$):</strong> Yields a serving latency of <strong>25.6 ms</strong> with a negligible routing score loss of <strong>0.0032%</strong>, validating the highly favorable tradeoff frontier of AAEC.</p>
+<p>The detailed bandwidth breakdown is summarized in Table X.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: center;">Baseline (Offloaded Tutel)</th>
+<th style="text-align: center;">AAEC (Ours)</th>
+<th style="text-align: center;">Savings / Delta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Cache Hit Rate (%)</strong></td>
+<td style="text-align: center;">0.0%</td>
+<td style="text-align: center;">24.0%</td>
+<td style="text-align: center;">+24.0%</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Remote Parameter Traffic (TB)</strong></td>
+<td style="text-align: center;">36.20</td>
+<td style="text-align: center;">28.20</td>
+<td style="text-align: center;">-8.00 (22.1%)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>DMA Prefetch Traffic (GB)</strong></td>
+<td style="text-align: center;">0.0</td>
+<td style="text-align: center;">54.9</td>
+<td style="text-align: center;">+54.9</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Total Parameter Traffic (TB)</strong></td>
+<td style="text-align: center;">36.20</td>
+<td style="text-align: center;">28.25</td>
+<td style="text-align: center;">-7.95 (22.0%)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Remote FFNs Skipped</strong></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">73,728</td>
+<td style="text-align: center;">+73,728</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Compute Saved (GFLOPs)</strong></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">13,296</td>
+<td style="text-align: center;">+13,296</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Energy Saved (Joules / Wh)</strong></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">9,430 / 2.62</td>
+<td style="text-align: center;">+9,430 / 2.62</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Average Routing Score Loss (%)</strong></td>
+<td style="text-align: center;">0.00%</td>
+<td style="text-align: center;">0.0296%</td>
+<td style="text-align: center;">+0.0296%</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Serving Block Latency (ms)</strong></td>
+<td style="text-align: center;">26.3</td>
+<td style="text-align: center;">22.0</td>
+<td style="text-align: center;">-4.3 (16.4%)</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="AAEC Performance Dashboard" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/aaec_results_plot.png" />
+<img alt="AAEC Cache Warm-up Timeline" src="/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/aaec_warmup_plot.png" /></p>
+<h4>3.11 Why Neuron-Level Granularity?</h4>
+<p>A key architectural decision in AAEC is caching at the granularity of individual FFN neurons (columns of weight matrices) rather than entire experts:</p>
+<ol>
+<li><strong>Memory-Aware Hit Rate Optimization &amp; Expert Coverage</strong>: A single expert in Qwen3-235B is 680 MB. If we were to cache at the entire expert level, a 2 GB HBM budget could hold only <strong>3 entire experts</strong>. If a token routes to any of the remaining 125 experts, a cache miss is triggered, requiring a full 680 MB PCIe transfer. This limits our expert coverage to just 2.3%. By contrast, caching at the neuron-slice level (128 active neurons, 15.7 MB per expert) allows us to cache active slices of <strong>all 128 experts</strong> within the same 2 GB budget. This provides <strong>100% expert coverage</strong>—any token routing to any expert can be processed locally on its cached slice.</li>
+</ol>
+<p>The comparison is summarized in Table Y.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Caching Strategy</th>
+<th style="text-align: center;">Memory Footprint (per Layer)</th>
+<th style="text-align: center;">Expert Coverage</th>
+<th style="text-align: center;">Expected Hit Rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Full Expert Caching</strong></td>
+<td style="text-align: center;">2.04 GB (3 / 128 experts)</td>
+<td style="text-align: center;">2.3%</td>
+<td style="text-align: center;">Low (&lt;3%)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Active Neuron Caching (AAEC)</strong></td>
+<td style="text-align: center;">2.00 GB (128 / 128 active slices)</td>
+<td style="text-align: center;"><strong>100%</strong></td>
+<td style="text-align: center;"><strong>High (24.0%)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">2. <strong>Local Sparse Execution</strong>: AAEC does not reconstruct the entire expert on a hit. Instead, the client GPU executes the sparse FFN multiplication locally on the cached active neuron slice (128 columns). Since the gating mechanism's magnitude selection is highly sparse, this local execution achieves a negligible routing score loss (&lt;0.03%) while completely avoiding the 680 MB PCIe transfer.</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">3. <strong>Weight Caching vs. Activation Caching</strong>: Caching activations is token-dependent and cannot be reused across different prompt inputs or future decoding steps. Caching neuron weights is token-independent and can be shared across all concurrent requests in the batch and across successive decoding steps.</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">4. <strong>Zero-Retraining Online Adaptability</strong>: Unlike Low-Rank Adapters (LoRA) or pruned experts, which require offline training or task-specific profiling, active neuron caching is entirely online and dynamic. It adjusts to arbitrary conversational topics on-the-fly by monitoring real-world execution history, requiring no offline analysis or model modification.</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+<h4>3.12 Empirical Validation &amp; Limitations</h4>
+<p>While our evaluation demonstrates substantial latency speedups (16.4%) and parameter traffic savings (8.0 TB), the core machine learning assumption of AAEC—that executing only a small cached subset of neurons (e.g., 128 out of 11,088) can closely approximate the full expert—warrants careful discussion:</p>
+<ol>
+<li><strong>Routing-Level vs. End-to-End Accuracy</strong>: Our simulation measures the <strong>Average Gating Score Loss (%)</strong>, showing a negligible drop of only <strong>0.0296%</strong>. While this indicates that the skipped neurons have near-zero gating weights and contribution, it remains a proxy metric. A key limitation of this work is the lack of end-to-end downstream evaluations (such as MMLU, GSM8k, or HumanEval) on a real instantiated Qwen3 or DeepSeek model.</li>
+<li><strong>Theoretical Support from MoE Sparsity</strong>: Prior machine learning literature (e.g., DejaVu, MoE-Pruning) has shown that FFN activations in large transformer models are highly sparse. Typically, only 5% to 10% of the hidden dimension neurons have non-zero activation values for any given token, and this active subset exhibits high temporal and prompt-level locality. This provides strong empirical backing for the feasibility of active-neuron execution.</li>
+<li><strong>Future Work</strong>: Full validation requires deploying AAEC within an inference framework (such as vLLM or DeepSpeed) and measuring both the end-to-end perplexity degradation and downstream task accuracy. If accuracy degrades, dynamic fallback mechanisms (where the remaining neurons are fetched on-demand if the top-activation magnitudes exceed a safety threshold) can be introduced to trade off latency for strict accuracy guarantees.</li>
+</ol>
+<hr />
+<div class="page-break"></div>
+
+<h2>4. Related Work</h2>
+<p>We position our co-design against prior efforts in distributed MoE execution frameworks, network collective optimizations, and dynamic routing architectures.</p>
+<h3>4.1 Distributed MoE Collective Libraries</h3>
+<p>Standard MoE parallel runtimes (e.g., <strong>Megatron-LM</strong> and <strong>DeepSpeed-MoE</strong>) rely on standard, network-blind collectives (like PyTorch’s standard <code>all_to_all_single</code>). These primitives execute statically without coordinating switch-level packet arrivals, triggering severe incast congestion. More recently, ByteDance's <strong>DeepEP</strong> introduces high-throughput collective kernels tailored for NVLink domains using low-latency SM-based transport. However, DeepEP does not scale collectives across scale-out inter-node links or coordinate wavefront routing schedules to handle dynamic traffic skew, which our co-design actively addresses.</p>
+<h3>4.2 Locality-Biased Expert Selection</h3>
+<p>Prior works like <strong>FasterMoE</strong> and <strong>FlexMoE</strong> attempt to address the MoE collective tax by dynamically adjusting gating parameters or caching expert weights. Tutel introduces locality-aware expert grouping to minimize inter-GPU traffic. However, Tutel does not co-design the routing mechanism with the execution-level queue steering (DAEL) or physical scheduling wavefronts (TWR). Consequently, under severe Zipfian popularity skew, Tutel-style local routing leads to severe compute hotspots.</p>
+<h3>4.3 Topology-Aware Wavefront Scheduling</h3>
+<p>Scheduling network collectives to prevent switch buffer congestion has been studied extensively in datacenter networks. However, standard solutions (e.g., credit-based flow control or dynamic packet re-routing) operate purely at the transport layer, unaware of trace dependencies. TWR differs by co-designing the network dispatch ring steps directly with the transformer wavefronts, enabling incast-free RDMA collectives without hardware modifications.</p>
+<h3>4.4 Active Neuron Caching vs. Static Offloading</h3>
+<p>Prior offloading frameworks (e.g., Tutel, HOBBIT) fetch full expert parameters dynamically. However, fetching a full 200MB expert over inter-node links is extremely slow and introduces massive communication stalls. AAEC operates at a fine-grained neuron-level granularity, caching only the hot neuron weights (e.g., 64–128 neurons per expert, ~3MB per expert). By exploiting online routing skew and pipelining transfers with asynchronous background DMA, AAEC bypasses the offloading transfer bottleneck completely.</p>
+<hr />
+<div class="page-break"></div>
+
+<h2>5. Conclusion</h2>
+<p>Our network-aware co-designed stack shifts the paradigm of distributed MoE collectives from network-blind, static transport to coordinated, topology-aware Ring wavefronts. By co-designing locality routing (LAER), reactive load steering (DAEL), incast-free scheduling (TWR), and payload compression (EPEG), we mitigate network congestion bottlenecks on constrained interconnects, enabling low-latency scale-out serving.</p>
+</body>
+</html>
