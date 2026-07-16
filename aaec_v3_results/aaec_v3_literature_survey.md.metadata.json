@@ -1,5 +1,0 @@
-{
-  "summary": "Comprehensive literature survey covering 45 papers across 7 categories (Foundational MoE, Expert-Level Offloading, Speculative Prefetching, Neuron-Level Sparsity, Kernel Fusion, LLM Serving Infrastructure, Model Compression). Includes structured tables for each paper with idea/method/results/weaknesses/future-work. Cross-paper gap analysis identifies repeated limitations, contradictory results, and open research questions. Positions AAEC v3's novelty: first system to combine column-level MoE decomposition (30.72 KB granularity vs. 9.44 MB expert-level), intra-layer pre-attention prefetching, energy-based column priority scheduling, Least-Stale eviction with LRU-HP fallback, and 100% lossless serving — bridging the gap between expert-level MoE serving and neuron-level dense model sparsity.",
-  "updatedAt": "2026-07-13T17:39:52.960319928Z",
-  "userFacing": true
-}
