@@ -1,6 +1,6 @@
 {
     "model_name": "deepseek_v2_lite",
-    "t_standard_us": 35.826271057128906,
-    "t_sa_us": 77.06243133544922,
-    "overhead_pct": 115.10034134606069
+    "t_standard_us": 37.85996627807617,
+    "t_sa_us": 80.24211120605469,
+    "overhead_pct": 111.94448673484696
 }

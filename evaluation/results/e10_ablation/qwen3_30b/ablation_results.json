@@ -1,8 +1,8 @@
 {
     "full": {
-        "hit_rate": 0.2914867756004466,
-        "avg_stall_ms": 45.92650466666639,
-        "total_transferred_gb": 232.722948096
+        "hit_rate": 0.2914867376704173,
+        "avg_stall_ms": 45.92650725252498,
+        "total_transferred_gb": 232.72292352
     },
     "no_prefetcher": {
         "hit_rate": 0.29087458492694773,

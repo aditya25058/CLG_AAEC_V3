@@ -371,9 +371,9 @@ To confirm the implementability of our coordination mechanics and validate our p
 
 | Cluster Scale | Prefetch Success Rate | Reactive Traffic | Predictive Traffic | Speculative Overhead | Reactive Stall | Predictive Stall | Stall Reduction | Throughput Speedup |
 |:--------------|:----------------------|:-----------------|:-------------------|:---------------------|:---------------|:-----------------|:----------------|:-------------------|
-| **4 Nodes** | **3.0%** | 12.82 GB | 15.78 GB | +23.1% | 13.17 ms | 12.95 ms | **-1.6%** | **+1.7%** (2.96 vs 2.91 tps) |
-| **8 Nodes** | **3.0%** | 15.05 GB | 18.46 GB | +22.7% | 15.47 ms | 15.22 ms | **-1.6%** | **+1.6%** (2.52 vs 2.48 tps) |
-| **16 Nodes** | **3.0%** | 16.31 GB | 19.89 GB | +22.0% | 16.80 ms | 16.52 ms | **-1.7%** | **+1.8%** (2.32 vs 2.28 tps) |
+| **4 Nodes** | **3.0%** | 12.82 GB | 15.78 GB | +23.1% | 13.17 ms | 12.95 ms | **-1.6%** | **+1.8%** (2.85 vs 2.80 tps) |
+| **8 Nodes** | **3.0%** | 15.05 GB | 18.46 GB | +22.7% | 15.47 ms | 15.22 ms | **-1.6%** | **+1.6%** (2.42 vs 2.39 tps) |
+| **16 Nodes** | **3.0%** | 16.31 GB | 19.89 GB | +22.0% | 16.80 ms | 16.52 ms | **-1.7%** | **+1.7%** (2.23 vs 2.20 tps) |
 
 ````carousel
 ![Qwen3-30B Prefetcher Tradeoffs](/home/palakm/.gemini/antigravity-ide/brain/f36cd9c9-271b-4ebf-8daa-07adaa8ff019/plots/e14_prefetcher/qwen3_30b_prefetcher_tradeoffs.png)

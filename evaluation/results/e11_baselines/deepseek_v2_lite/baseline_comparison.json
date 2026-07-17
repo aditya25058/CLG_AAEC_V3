@@ -28,53 +28,53 @@
     "aaec_lru": [
         {
             "bandwidth_gbps": 2.0,
-            "hit_rate": 0.3528632871980726,
-            "avg_stall_ms": 105.34939627986314,
-            "total_transferred_gb": 128.266899456
+            "hit_rate": 0.3528636060627917,
+            "avg_stall_ms": 105.34934385665497,
+            "total_transferred_gb": 128.266850304
         },
         {
             "bandwidth_gbps": 8.0,
-            "hit_rate": 0.3528632871980726,
-            "avg_stall_ms": 25.593428191126307,
-            "total_transferred_gb": 128.266899456
+            "hit_rate": 0.3528636060627917,
+            "avg_stall_ms": 25.59341508532426,
+            "total_transferred_gb": 128.266850304
         },
         {
             "bandwidth_gbps": 16.0,
-            "hit_rate": 0.3528632871980726,
-            "avg_stall_ms": 12.363119467576782,
-            "total_transferred_gb": 128.266899456
+            "hit_rate": 0.3528636060627917,
+            "avg_stall_ms": 12.363112914675757,
+            "total_transferred_gb": 128.266850304
         },
         {
             "bandwidth_gbps": 64.0,
-            "hit_rate": 0.3528632871980726,
-            "avg_stall_ms": 2.6007712627986335,
-            "total_transferred_gb": 128.266899456
+            "hit_rate": 0.3528636060627917,
+            "avg_stall_ms": 2.6007696245733776,
+            "total_transferred_gb": 128.266850304
         }
     ],
     "aaec_ls": [
         {
             "bandwidth_gbps": 2.0,
-            "hit_rate": 0.3528632871980726,
-            "avg_stall_ms": 105.34939627986314,
-            "total_transferred_gb": 128.266899456
+            "hit_rate": 0.3528636060627917,
+            "avg_stall_ms": 105.34934385665497,
+            "total_transferred_gb": 128.266850304
         },
         {
             "bandwidth_gbps": 8.0,
-            "hit_rate": 0.3528632871980726,
-            "avg_stall_ms": 25.593428191126307,
-            "total_transferred_gb": 128.266899456
+            "hit_rate": 0.3528636060627917,
+            "avg_stall_ms": 25.59341508532426,
+            "total_transferred_gb": 128.266850304
         },
         {
             "bandwidth_gbps": 16.0,
-            "hit_rate": 0.3528632871980726,
-            "avg_stall_ms": 12.363119467576782,
-            "total_transferred_gb": 128.266899456
+            "hit_rate": 0.3528636060627917,
+            "avg_stall_ms": 12.363112914675757,
+            "total_transferred_gb": 128.266850304
         },
         {
             "bandwidth_gbps": 64.0,
-            "hit_rate": 0.3528632871980726,
-            "avg_stall_ms": 2.6007712627986335,
-            "total_transferred_gb": 128.266899456
+            "hit_rate": 0.3528636060627917,
+            "avg_stall_ms": 2.6007696245733776,
+            "total_transferred_gb": 128.266850304
         }
     ]
 }

@@ -4,37 +4,37 @@
             "network_gb": 139.7096448,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 203.36954142853725,
-            "throughput": 0.1890677946857841
+            "throughput": 0.1820671961627882
         },
         "32": {
             "network_gb": 139.7096448,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 203.36954142853725,
-            "throughput": 0.1890677946857841
+            "throughput": 0.1820671961627882
         },
         "64": {
             "network_gb": 139.7096448,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 203.36954142853725,
-            "throughput": 0.1890677946857841
+            "throughput": 0.1820671961627882
         },
         "128": {
             "network_gb": 139.7096448,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 203.36954142853725,
-            "throughput": 0.1890677946857841
+            "throughput": 0.1820671961627882
         },
         "256": {
             "network_gb": 139.7096448,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 203.36954142853725,
-            "throughput": 0.1890677946857841
+            "throughput": 0.1820671961627882
         },
         "512": {
             "network_gb": 139.7096448,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 203.36954142853725,
-            "throughput": 0.1890677946857841
+            "throughput": 0.1820671961627882
         }
     },
     "expert_cache": {
@@ -42,37 +42,37 @@
             "network_gb": 137.045213184,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 199.6054241485383,
-            "throughput": 0.19263216534021124
+            "throughput": 0.18549962587545907
         },
         "32": {
             "network_gb": 137.045213184,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 199.6054241485383,
-            "throughput": 0.19263216534021124
+            "throughput": 0.18549962587545907
         },
         "64": {
             "network_gb": 132.979359744,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 193.70521391996905,
-            "throughput": 0.19849794375167015
+            "throughput": 0.19114827597603787
         },
         "128": {
             "network_gb": 114.899288064,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 167.53878980569166,
-            "throughput": 0.2294889366205079
+            "throughput": 0.2209921638895646
         },
         "256": {
             "network_gb": 78.946762752,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 115.34339410285175,
-            "throughput": 0.33328575716098524
+            "throughput": 0.32094778285825354
         },
         "512": {
             "network_gb": 40.277901312,
             "avg_fetch_kb": 16896.0,
             "avg_stall_ms": 58.96463238857408,
-            "throughput": 0.6516439103248579
+            "throughput": 0.6275316688604492
         }
     },
     "aaec_column_cache": {
@@ -80,37 +80,37 @@
             "network_gb": 15.010480128,
             "avg_fetch_kb": 1815.3154179566563,
             "avg_stall_ms": 16.260298285714182,
-            "throughput": 2.3570021223740247
+            "throughput": 2.270002992019615
         },
         "32": {
             "network_gb": 12.820156416,
             "avg_fetch_kb": 1550.4252631578947,
             "avg_stall_ms": 13.167485005714319,
-            "throughput": 2.9082058826197534
+            "throughput": 2.8009470942347456
         },
         "64": {
             "network_gb": 10.179170304,
             "avg_fetch_kb": 1231.033560371517,
             "avg_stall_ms": 9.474507840000012,
-            "throughput": 4.0349067230664195
+            "throughput": 3.88633690037252
         },
         "128": {
             "network_gb": 9.094668288,
             "avg_fetch_kb": 1099.8776470588236,
             "avg_stall_ms": 8.022714102857163,
-            "throughput": 4.75985198112369
+            "throughput": 4.584773547199755
         },
         "256": {
             "network_gb": 9.079898112,
             "avg_fetch_kb": 1098.0913931888545,
             "avg_stall_ms": 8.002894765714313,
-            "throughput": 4.7715554848889665
+            "throughput": 4.596049557975144
         },
         "512": {
             "network_gb": 9.079898112,
             "avg_fetch_kb": 1098.0913931888545,
             "avg_stall_ms": 8.002894765714313,
-            "throughput": 4.7715554848889665
+            "throughput": 4.596049557975144
         }
     }
 }

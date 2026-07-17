@@ -3,19 +3,19 @@
         "4": {
             "network_gb": 12.820156416,
             "avg_stall_ms": 13.167485005714319,
-            "throughput": 2.9082058826197534,
+            "throughput": 2.8009470942347456,
             "prefetch_hit_rate": 2.9945054945054945
         },
         "8": {
             "network_gb": 15.046483968,
             "avg_stall_ms": 15.470244342857187,
-            "throughput": 2.4769252558856496,
+            "throughput": 2.385515546984698,
             "prefetch_hit_rate": 2.9945054945054945
         },
         "16": {
             "network_gb": 16.306618368,
             "avg_stall_ms": 16.796550857142936,
-            "throughput": 2.282009229686727,
+            "throughput": 2.197768998724616,
             "prefetch_hit_rate": 2.9945054945054945
         }
     },
@@ -23,19 +23,19 @@
         "4": {
             "network_gb": 15.781552128,
             "avg_stall_ms": 12.954039040000026,
-            "throughput": 2.9559124326955706,
+            "throughput": 2.846901705122299,
             "prefetch_hit_rate": 2.9945054945054945
         },
         "8": {
             "network_gb": 18.456895488,
             "avg_stall_ms": 15.218630765714371,
-            "throughput": 2.517722247475445,
+            "throughput": 2.424812442248492,
             "prefetch_hit_rate": 2.9945054945054945
         },
         "16": {
             "network_gb": 19.886137344,
             "avg_stall_ms": 16.51843920000009,
-            "throughput": 2.3202964119637817,
+            "throughput": 2.234647565857479,
             "prefetch_hit_rate": 2.9945054945054945
         }
     }

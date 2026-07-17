@@ -1,7 +1,7 @@
 {
     "model_name": "deepseek_v2_lite",
     "max_abs_diff": 0.0078125,
-    "mean_abs_diff": 0.0003147125244140625,
-    "cosine_similarity": 0.9999852776527405,
+    "mean_abs_diff": 0.000316619873046875,
+    "cosine_similarity": 0.999984622001648,
     "verdict": "PASS"
 }

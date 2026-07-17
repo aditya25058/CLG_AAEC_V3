@@ -1,6 +1,6 @@
 {
     "model_name": "mixtral_8x7b",
-    "t_standard_us": 58.198974609375,
-    "t_sa_us": 94.59085083007812,
-    "overhead_pct": 62.53009862280447
+    "t_standard_us": 61.167457580566406,
+    "t_sa_us": 90.66831970214844,
+    "overhead_pct": 48.22966866446119
 }
