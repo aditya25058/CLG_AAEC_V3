@@ -1,0 +1,90 @@
+{
+    "1": [
+        {
+            "link_speed_gbps": 16.0,
+            "dense_compute_ms": 0.0310951042175293,
+            "sa_ffn_compute_ms": 0.06638195037841797,
+            "full_transfer_ms": 0.589824,
+            "miss_transfer_ms": 0.012288,
+            "total_dense_system_ms": 0.6209191042175293,
+            "total_sa_system_ms": 0.07866995037841798,
+            "net_speedup": 7.8927100021137155
+        },
+        {
+            "link_speed_gbps": 64.0,
+            "dense_compute_ms": 0.0310951042175293,
+            "sa_ffn_compute_ms": 0.06638195037841797,
+            "full_transfer_ms": 0.147456,
+            "miss_transfer_ms": 0.003072,
+            "total_dense_system_ms": 0.1785511042175293,
+            "total_sa_system_ms": 0.06945395037841798,
+            "net_speedup": 2.570783997810037
+        }
+    ],
+    "4": [
+        {
+            "link_speed_gbps": 16.0,
+            "dense_compute_ms": 0.03952483367919922,
+            "sa_ffn_compute_ms": 0.07955219268798829,
+            "full_transfer_ms": 0.589824,
+            "miss_transfer_ms": 0.012288,
+            "total_dense_system_ms": 0.6293488336791992,
+            "total_sa_system_ms": 0.09184019268798829,
+            "net_speedup": 6.852651494507494
+        },
+        {
+            "link_speed_gbps": 64.0,
+            "dense_compute_ms": 0.03952483367919922,
+            "sa_ffn_compute_ms": 0.07955219268798829,
+            "full_transfer_ms": 0.147456,
+            "miss_transfer_ms": 0.003072,
+            "total_dense_system_ms": 0.1869808336791992,
+            "total_sa_system_ms": 0.08262419268798829,
+            "net_speedup": 2.2630276629181765
+        }
+    ],
+    "8": [
+        {
+            "link_speed_gbps": 16.0,
+            "dense_compute_ms": 0.03971417617797852,
+            "sa_ffn_compute_ms": 0.08341590118408203,
+            "full_transfer_ms": 0.589824,
+            "miss_transfer_ms": 0.012288,
+            "total_dense_system_ms": 0.6295381761779786,
+            "total_sa_system_ms": 0.09570390118408204,
+            "net_speedup": 6.577978205581097
+        },
+        {
+            "link_speed_gbps": 64.0,
+            "dense_compute_ms": 0.03971417617797852,
+            "sa_ffn_compute_ms": 0.08341590118408203,
+            "full_transfer_ms": 0.147456,
+            "miss_transfer_ms": 0.003072,
+            "total_dense_system_ms": 0.18717017617797851,
+            "total_sa_system_ms": 0.08648790118408203,
+            "net_speedup": 2.1641197625966546
+        }
+    ],
+    "16": [
+        {
+            "link_speed_gbps": 16.0,
+            "dense_compute_ms": 0.03979715347290039,
+            "sa_ffn_compute_ms": 0.08002674865722656,
+            "full_transfer_ms": 0.589824,
+            "miss_transfer_ms": 0.012288,
+            "total_dense_system_ms": 0.6296211534729004,
+            "total_sa_system_ms": 0.09231474865722655,
+            "net_speedup": 6.820374454040314
+        },
+        {
+            "link_speed_gbps": 64.0,
+            "dense_compute_ms": 0.03979715347290039,
+            "sa_ffn_compute_ms": 0.08002674865722656,
+            "full_transfer_ms": 0.147456,
+            "miss_transfer_ms": 0.003072,
+            "total_dense_system_ms": 0.1872531534729004,
+            "total_sa_system_ms": 0.08309874865722656,
+            "net_speedup": 2.253381145909905
+        }
+    ]
+}

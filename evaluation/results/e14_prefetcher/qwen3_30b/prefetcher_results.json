@@ -1,42 +1,82 @@
 {
     "reactive": {
         "4": {
-            "network_gb": 23.973679104,
-            "avg_stall_ms": 19.558039978378275,
-            "throughput": 1.063506301470251,
-            "prefetch_hit_rate": 8.565596846846848
+            "network_gb": 23.407362048,
+            "avg_stall_ms": 40.14442897297297,
+            "throughput": 0.5185558493572283,
+            "prefetch_hit_rate": 0.0
         },
         "8": {
-            "network_gb": 28.177268736,
-            "avg_stall_ms": 23.066459805405277,
-            "throughput": 0.9019653250842193,
-            "prefetch_hit_rate": 8.565596846846848
+            "network_gb": 27.531005952,
+            "avg_stall_ms": 40.14442897297297,
+            "throughput": 0.5185558493572283,
+            "prefetch_hit_rate": 0.0
         },
         "16": {
-            "network_gb": 30.142636032,
-            "avg_stall_ms": 24.673594832432272,
-            "throughput": 0.8432893820884697,
-            "prefetch_hit_rate": 8.565596846846848
+            "network_gb": 29.44290816,
+            "avg_stall_ms": 40.14442897297297,
+            "throughput": 0.5185558493572283,
+            "prefetch_hit_rate": 0.0
         }
     },
-    "predictive": {
+    "markov": {
         "4": {
-            "network_gb": 29.611352064,
-            "avg_stall_ms": 18.394031740540473,
-            "throughput": 1.130692796273205,
-            "prefetch_hit_rate": 8.565596846846848
+            "network_gb": 23.815532544,
+            "avg_stall_ms": 35.244796648648624,
+            "throughput": 0.5905801616840596,
+            "prefetch_hit_rate": 22.447912216675412
         },
         "8": {
-            "network_gb": 35.148435456,
-            "avg_stall_ms": 21.617092540540455,
-            "throughput": 0.9623523507316614,
-            "prefetch_hit_rate": 8.565596846846848
+            "network_gb": 28.033339392,
+            "avg_stall_ms": 35.244796648648624,
+            "throughput": 0.5905801616840596,
+            "prefetch_hit_rate": 22.447912216675412
         },
         "16": {
-            "network_gb": 37.822734336,
-            "avg_stall_ms": 23.05489909189173,
-            "throughput": 0.9024169968931879,
-            "prefetch_hit_rate": 8.565596846846848
+            "network_gb": 29.995462656,
+            "avg_stall_ms": 35.244796648648624,
+            "throughput": 0.5905801616840596,
+            "prefetch_hit_rate": 22.447912216675412
+        }
+    },
+    "temporal": {
+        "4": {
+            "network_gb": 27.02278656,
+            "avg_stall_ms": 35.29252056216208,
+            "throughput": 0.5897822628156651,
+            "prefetch_hit_rate": 22.360122789244347
+        },
+        "8": {
+            "network_gb": 31.779827712,
+            "avg_stall_ms": 35.29252056216208,
+            "throughput": 0.5897822628156651,
+            "prefetch_hit_rate": 22.360122789244347
+        },
+        "16": {
+            "network_gb": 33.987072,
+            "avg_stall_ms": 35.29252056216208,
+            "throughput": 0.5897822628156651,
+            "prefetch_hit_rate": 22.360122789244347
+        }
+    },
+    "oracle": {
+        "4": {
+            "network_gb": 23.845158912,
+            "avg_stall_ms": 0.0012785081081081084,
+            "throughput": 640.4638437180703,
+            "prefetch_hit_rate": 98.57382611773609
+        },
+        "8": {
+            "network_gb": 28.037259264,
+            "avg_stall_ms": 0.0012785081081081084,
+            "throughput": 640.4638437180703,
+            "prefetch_hit_rate": 98.57382611773609
+        },
+        "16": {
+            "network_gb": 29.985792,
+            "avg_stall_ms": 0.0012785081081081084,
+            "throughput": 640.4638437180703,
+            "prefetch_hit_rate": 98.57382611773609
         }
     }
 }

@@ -1,0 +1,554 @@
+{
+    "PCIe_Gen4": {
+        "1": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 0.75,
+                "copy_time_ms": 0.099152,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 1.5,
+                "copy_time_ms": 0.148304,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.012503999999999987,
+                "overlap_fraction": 0.915686697594131
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 3.0,
+                "copy_time_ms": 0.246608,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.11080799999999999,
+                "overlap_fraction": 0.5506715110620904
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 6.0,
+                "copy_time_ms": 0.443216,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.307416,
+                "overlap_fraction": 0.30639688097902595
+            }
+        ],
+        "4": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 2.34375,
+                "copy_time_ms": 0.2036,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.033299999999999996,
+                "overlap_fraction": 0.8364440078585462
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 4.6875,
+                "copy_time_ms": 0.35719999999999996,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.18689999999999996,
+                "overlap_fraction": 0.47676371780515125
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 9.375,
+                "copy_time_ms": 0.6644,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.4941,
+                "overlap_fraction": 0.25632149307646
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 18.75,
+                "copy_time_ms": 1.2788,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 1.1084999999999998,
+                "overlap_fraction": 0.13317172349077266
+            }
+        ],
+        "8": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 3.75,
+                "copy_time_ms": 0.29575999999999997,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.07945999999999998,
+                "overlap_fraction": 0.7313362185555856
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 7.5,
+                "copy_time_ms": 0.54152,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.32522,
+                "overlap_fraction": 0.3994312306101344
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 15.0,
+                "copy_time_ms": 1.03304,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.81674,
+                "overlap_fraction": 0.2093820181212731
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 30.0,
+                "copy_time_ms": 2.0160799999999997,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 1.7997799999999997,
+                "overlap_fraction": 0.10728740922979241
+            }
+        ],
+        "16": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 6.0,
+                "copy_time_ms": 0.443216,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.13491599999999998,
+                "overlap_fraction": 0.6955976318544457
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 12.0,
+                "copy_time_ms": 0.8364320000000001,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.528132,
+                "overlap_fraction": 0.3685894370373204
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 24.0,
+                "copy_time_ms": 1.622864,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 1.314564,
+                "overlap_fraction": 0.18997278884737112
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 48.0,
+                "copy_time_ms": 3.195728,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 2.887428,
+                "overlap_fraction": 0.09647254084202406
+            }
+        ]
+    },
+    "PCIe_Gen5_x8": {
+        "1": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 0.75,
+                "copy_time_ms": 0.074576,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 1.5,
+                "copy_time_ms": 0.099152,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 3.0,
+                "copy_time_ms": 0.148304,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.012503999999999987,
+                "overlap_fraction": 0.915686697594131
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 6.0,
+                "copy_time_ms": 0.246608,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.11080799999999999,
+                "overlap_fraction": 0.5506715110620904
+            }
+        ],
+        "4": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 2.34375,
+                "copy_time_ms": 0.1268,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 4.6875,
+                "copy_time_ms": 0.2036,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.033299999999999996,
+                "overlap_fraction": 0.8364440078585462
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 9.375,
+                "copy_time_ms": 0.35719999999999996,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.18689999999999996,
+                "overlap_fraction": 0.47676371780515125
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 18.75,
+                "copy_time_ms": 0.6644,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.4941,
+                "overlap_fraction": 0.25632149307646
+            }
+        ],
+        "8": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 3.75,
+                "copy_time_ms": 0.17287999999999998,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 7.5,
+                "copy_time_ms": 0.29575999999999997,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.07945999999999998,
+                "overlap_fraction": 0.7313362185555856
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 15.0,
+                "copy_time_ms": 0.54152,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.32522,
+                "overlap_fraction": 0.3994312306101344
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 30.0,
+                "copy_time_ms": 1.03304,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.81674,
+                "overlap_fraction": 0.2093820181212731
+            }
+        ],
+        "16": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 6.0,
+                "copy_time_ms": 0.246608,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 12.0,
+                "copy_time_ms": 0.443216,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.13491599999999998,
+                "overlap_fraction": 0.6955976318544457
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 24.0,
+                "copy_time_ms": 0.8364320000000001,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.528132,
+                "overlap_fraction": 0.3685894370373204
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 48.0,
+                "copy_time_ms": 1.622864,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 1.314564,
+                "overlap_fraction": 0.18997278884737112
+            }
+        ]
+    },
+    "PCIe_Gen5_x16": {
+        "1": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 0.75,
+                "copy_time_ms": 0.062288,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 1.5,
+                "copy_time_ms": 0.074576,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 3.0,
+                "copy_time_ms": 0.099152,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 6.0,
+                "copy_time_ms": 0.148304,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.012503999999999987,
+                "overlap_fraction": 0.915686697594131
+            }
+        ],
+        "4": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 2.34375,
+                "copy_time_ms": 0.0884,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 4.6875,
+                "copy_time_ms": 0.1268,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 9.375,
+                "copy_time_ms": 0.2036,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.033299999999999996,
+                "overlap_fraction": 0.8364440078585462
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 18.75,
+                "copy_time_ms": 0.35719999999999996,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.18689999999999996,
+                "overlap_fraction": 0.47676371780515125
+            }
+        ],
+        "8": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 3.75,
+                "copy_time_ms": 0.11144,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 7.5,
+                "copy_time_ms": 0.17287999999999998,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 15.0,
+                "copy_time_ms": 0.29575999999999997,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.07945999999999998,
+                "overlap_fraction": 0.7313362185555856
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 30.0,
+                "copy_time_ms": 0.54152,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.32522,
+                "overlap_fraction": 0.3994312306101344
+            }
+        ],
+        "16": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 6.0,
+                "copy_time_ms": 0.148304,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 12.0,
+                "copy_time_ms": 0.246608,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 24.0,
+                "copy_time_ms": 0.443216,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.13491599999999998,
+                "overlap_fraction": 0.6955976318544457
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 48.0,
+                "copy_time_ms": 0.8364320000000001,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.528132,
+                "overlap_fraction": 0.3685894370373204
+            }
+        ]
+    },
+    "CXL_3.0": {
+        "1": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 0.75,
+                "copy_time_ms": 0.056144,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 1.5,
+                "copy_time_ms": 0.062288,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 3.0,
+                "copy_time_ms": 0.074576,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 6.0,
+                "copy_time_ms": 0.099152,
+                "overlap_window_ms": 0.1358,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            }
+        ],
+        "4": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 2.34375,
+                "copy_time_ms": 0.0692,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 4.6875,
+                "copy_time_ms": 0.0884,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 9.375,
+                "copy_time_ms": 0.1268,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 18.75,
+                "copy_time_ms": 0.2036,
+                "overlap_window_ms": 0.1703,
+                "exposed_stall_ms": 0.033299999999999996,
+                "overlap_fraction": 0.8364440078585462
+            }
+        ],
+        "8": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 3.75,
+                "copy_time_ms": 0.08072,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 7.5,
+                "copy_time_ms": 0.11144,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 15.0,
+                "copy_time_ms": 0.17287999999999998,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 30.0,
+                "copy_time_ms": 0.29575999999999997,
+                "overlap_window_ms": 0.2163,
+                "exposed_stall_ms": 0.07945999999999998,
+                "overlap_fraction": 0.7313362185555856
+            }
+        ],
+        "16": [
+            {
+                "miss_cols": 8,
+                "payload_mb": 6.0,
+                "copy_time_ms": 0.099152,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 16,
+                "payload_mb": 12.0,
+                "copy_time_ms": 0.148304,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 32,
+                "payload_mb": 24.0,
+                "copy_time_ms": 0.246608,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.0,
+                "overlap_fraction": 1.0
+            },
+            {
+                "miss_cols": 64,
+                "payload_mb": 48.0,
+                "copy_time_ms": 0.443216,
+                "overlap_window_ms": 0.3083,
+                "exposed_stall_ms": 0.13491599999999998,
+                "overlap_fraction": 0.6955976318544457
+            }
+        ]
+    }
+}

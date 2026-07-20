@@ -3,6 +3,19 @@
 
 ---
 
+### ⚡ Quick Start End-to-End Demos
+Run real-time, token-by-token generation demos directly from the terminal:
+
+```bash
+# 1. Standard Baseline (Full-Expert Monolithic Offloading)
+python3 serve_qwen3_baseline.py --max-tokens 20
+
+# 2. AAEC v3 Serving Engine (Column-Granular Caching + Fused Triton SA-FFN)
+python3 serve_qwen3_aaec.py --max-tokens 20
+```
+
+---
+
 ## 1. Architectural Overview & The B=1 Timing Fallacy
 
  Mixture-of-Experts (MoE) serving engines on offloaded edge/node systems suffer from severe memory bandwidth bottlenecks. Traditional predictive prefetchers target the feed-forward network (FFN) block boundary. However, during single-batch autoregressive decoding (B=1), the local FFN compute time (GEMV on cached resident columns) takes **< 0.5 µs**, whereas transferring missed columns over PCIe Gen5 takes **12-15 µs**. This timing gap creates a massive GPU stall, leaving the GPU idle for over 95% of the transfer window.

@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+
+# Environments
+venv/
+.venv/
+moe_venv/
+
+# Large Datasets and DBs
+*.db
+datasets/
+workloads/
+astra-sim/
+bench/
+serving/
+log/
+debug.log
+err.log
+
+# System/IDE
+.DS_Store
+.vscode/
+.idea/

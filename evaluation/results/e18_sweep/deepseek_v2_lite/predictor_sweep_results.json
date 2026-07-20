@@ -1,0 +1,90 @@
+{
+    "column_level": [
+        {
+            "target_accuracy": 0.0,
+            "avg_stall_ms": 11.52996960000002,
+            "total_gb": 19.422670848,
+            "throughput": 3.196837134247364
+        },
+        {
+            "target_accuracy": 0.1,
+            "avg_stall_ms": 11.502767999999993,
+            "total_gb": 19.353403392,
+            "throughput": 3.2043606375108835
+        },
+        {
+            "target_accuracy": 0.2,
+            "avg_stall_ms": 11.476373485714294,
+            "total_gb": 19.263492096,
+            "throughput": 3.211694843463819
+        },
+        {
+            "target_accuracy": 0.4,
+            "avg_stall_ms": 11.412573942857142,
+            "total_gb": 19.042566144,
+            "throughput": 3.229562156772238
+        },
+        {
+            "target_accuracy": 0.6,
+            "avg_stall_ms": 11.347585371428583,
+            "total_gb": 18.841104384,
+            "throughput": 3.2479680181267794
+        },
+        {
+            "target_accuracy": 0.8,
+            "avg_stall_ms": 11.274971657142867,
+            "total_gb": 18.555162624,
+            "throughput": 3.268783203267774
+        },
+        {
+            "target_accuracy": 1.0,
+            "avg_stall_ms": 11.196019199999999,
+            "total_gb": 18.273779712,
+            "throughput": 3.2917203006405575
+        }
+    ],
+    "expert_level": [
+        {
+            "target_accuracy": 0.0,
+            "avg_stall_ms": 32.644563428571445,
+            "total_gb": 146.215010304,
+            "throughput": 1.1326269808074774
+        },
+        {
+            "target_accuracy": 0.1,
+            "avg_stall_ms": 30.044604342857163,
+            "total_gb": 136.612675584,
+            "throughput": 1.2304598102480553
+        },
+        {
+            "target_accuracy": 0.2,
+            "avg_stall_ms": 27.88191634285714,
+            "total_gb": 129.657470976,
+            "throughput": 1.3257118314682348
+        },
+        {
+            "target_accuracy": 0.4,
+            "avg_stall_ms": 22.08596365714286,
+            "total_gb": 109.535821824,
+            "throughput": 1.6727414537931016
+        },
+        {
+            "target_accuracy": 0.6,
+            "avg_stall_ms": 15.734338971428578,
+            "total_gb": 92.718759936,
+            "throughput": 2.3456164937481128
+        },
+        {
+            "target_accuracy": 0.8,
+            "avg_stall_ms": 7.813917942857141,
+            "total_gb": 72.2337792,
+            "throughput": 4.7064186752147465
+        },
+        {
+            "target_accuracy": 1.0,
+            "avg_stall_ms": 0.0,
+            "total_gb": 50.987532288,
+            "throughput": 666.6666666666666
+        }
+    ]
+}

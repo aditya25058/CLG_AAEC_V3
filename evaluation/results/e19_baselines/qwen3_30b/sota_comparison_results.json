@@ -1,0 +1,58 @@
+{
+    "demand_only": {
+        "hit_rate": 0.0,
+        "avg_stall_ms": 224.09241600000726,
+        "total_gb": 268.167020544,
+        "throughput": 0.09295463395343827,
+        "avg_power_watts": 260.0,
+        "joules_per_token": 2797.063351680091
+    },
+    "expert_lru": {
+        "hit_rate": 0.5690104166666666,
+        "avg_stall_ms": 95.41114227027298,
+        "total_gb": 115.577192448,
+        "throughput": 0.2182817596853364,
+        "avg_power_watts": 250.0,
+        "joules_per_token": 1145.3087072432756
+    },
+    "moe_infinity": {
+        "hit_rate": 0.5719664977477478,
+        "avg_stall_ms": 90.3402609729756,
+        "total_gb": 118.191292416,
+        "throughput": 0.23052987727031882,
+        "avg_power_watts": 250.0,
+        "joules_per_token": 1084.4581316757071
+    },
+    "powerinfer": {
+        "hit_rate": 0.11715692856009471,
+        "avg_stall_ms": 27.626911135135163,
+        "total_gb": 35.551862784,
+        "throughput": 0.7532436170121228,
+        "avg_power_watts": 240.0,
+        "joules_per_token": 318.6220162767571
+    },
+    "firm_moe": {
+        "hit_rate": 0.5693960204261314,
+        "avg_stall_ms": 95.25308172973197,
+        "total_gb": 115.388448768,
+        "throughput": 0.21864385209129428,
+        "avg_power_watts": 250.0,
+        "joules_per_token": 1143.4119807567836
+    },
+    "mone": {
+        "hit_rate": 0.5690104166666666,
+        "avg_stall_ms": 46.603206270271606,
+        "total_gb": 57.788596224,
+        "throughput": 0.4467369194269797,
+        "avg_power_watts": 240.0,
+        "joules_per_token": 537.2289362335289
+    },
+    "aaec_v3": {
+        "hit_rate": 0.2245877528103602,
+        "avg_stall_ms": 19.181610162162155,
+        "total_gb": 31.608004608,
+        "throughput": 1.0843431512796071,
+        "avg_power_watts": 230.0,
+        "joules_per_token": 212.10997619027017
+    }
+}

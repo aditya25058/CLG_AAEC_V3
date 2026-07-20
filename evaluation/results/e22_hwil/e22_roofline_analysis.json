@@ -1,0 +1,26 @@
+{
+    "dense_ffn": {
+        "flops": 9437184,
+        "bytes": 9437184,
+        "arith_intensity": 1.0,
+        "latency_us": 31.495264053344727,
+        "achieved_gflops": 299.6381927141771,
+        "achieved_bw_gbps": 299.6381927141771,
+        "tc_utilization_pct": 0.035884813498703844,
+        "bw_utilization_pct": 7.570444484946363
+    },
+    "sa_ffn": {
+        "flops": 589824,
+        "bytes": 589824,
+        "arith_intensity": 1.0,
+        "latency_us": 70.59101104736328,
+        "achieved_gflops": 8.355511434795226,
+        "achieved_bw_gbps": 8.355511434795226,
+        "tc_utilization_pct": 0.0010006600520712846,
+        "bw_utilization_pct": 0.2111043818796166
+    },
+    "h100_peak": {
+        "bf16_tflops": 835.0,
+        "hbm_bw_gbps": 3958.0
+    }
+}
