@@ -1,4 +1,4 @@
-# The Evolved COLOSSUS Serving Engine: Bandwidth-Budgeted Multi-Expert Speculative Prefetching (BMESP)
+# The Evolved COLOSSUS Serving Engine
 ## Systems & Architectural Report (COLOSSUS v3)
 
 ---
