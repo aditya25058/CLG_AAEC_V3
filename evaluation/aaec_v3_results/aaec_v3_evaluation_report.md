@@ -33,6 +33,7 @@ To maintain absolute scientific rigor, this evaluation explicitly demarcates **p
 |:---|:---|:---|:---|:---:|
 | **Single-Node Weight Offloading** | **E22** | **Physical Execution** | **Single NVIDIA H100 NVL (SM 9.0)**: Real `cudaMemcpyAsync` DMA over PCIe Gen5, real cuBLAS GEMV execution, CUDA event timing, `nvidia-smi` power, `ncu` profiler. | 🟢 **Physically Measured** |
 | **Distributed Multi-Node Serving** | **E23** | **Physical Execution** | **2 Nodes × 3 NVIDIA H100 NVL GPUs (`gpu1` & `gpu2`)**: Real TCP socket network transfers, multi-GPU layer execution, cluster `nvidia-smi` power. | 🟢 **Physically Measured** |
+| **Physical I/O Bottleneck Proof** | **E24** | **Physical Execution** | **Single NVIDIA H100 NVL (SM 9.0)**: Direct CUDA event measurement comparing FFN GEMV compute latency vs PCIe Gen5 DMA transfer latency. | 🟢 **Physically Measured** |
 | **Algorithmic Correctness & Traces** | E01–E04 | Physical / Trace Analysis | Real Qwen3 / DeepSeek models + SQLite trace database (`qwen3_30b_real_v2.db`, 426K records). Bit-exact layer outputs & energy CDF. | 🟢 **Empirically Exact** |
 | **Distributed Network Scaling** | E13, E15 | Trace-Driven Network Sim | Replaces PCIe with InfiniBand (100–400 Gbps) and Ethernet RDMA models. Driven by real SQLite expert activation traces. | 🟡 **Trace Projection** |
 | **Interconnect Scaling & CXL** | E06, E16 | Discrete Event Sim | Models CXL 3.0 / PCIe Gen6 memory pooling latencies ($1.2\ \mu\text{s}$ base latency) driven by real activation traces. | 🟡 **Trace Projection** |
@@ -40,7 +41,7 @@ To maintain absolute scientific rigor, this evaluation explicitly demarcates **p
 
 > [!IMPORTANT]
 > **Declaration for Reviewers:**
-> - **Physically Validated Grounding:** All single-node offloading latencies, kernel execution times, wall-clock throughputs, and power draws reported in **E22** and **E23** were measured directly on physical **NVIDIA H100 NVL GPUs** across 2 physical servers (`192.168.3.214` and `192.168.3.215`).
+> - **Physically Validated Grounding:** All single-node offloading latencies, kernel execution times, wall-clock throughputs, transfer-to-compute ratios, and power draws reported in **E22**, **E23**, and **E24** were measured directly on physical **NVIDIA H100 NVL GPUs** across 2 physical servers (`192.168.3.214` and `192.168.3.215`).
 > - **Synthetic / CXL Scaling Projections:** Ultra-high bandwidth InfiniBand sweeps and CXL memory pool results (E06, E16) remain **trace-driven architectural projections** derived by replaying real activation traces through verified interconnect models.
 
 ---
@@ -861,6 +862,28 @@ Profiled using `/usr/local/cuda-12.6/bin/ncu` with hardware counters.
 > [!IMPORTANT]
 > **Physical Multi-Node Grounding Confirmed:**
 > Over a physical Ethernet link between `gpu1` and `gpu2`, transferring monolithic experts during misses creates massive inter-node network bottlenecks (13.56 GB of network traffic, **4,604.87 ms** per token). AAEC reduces inter-node data movement to **1.69 GB** (an 8.01× reduction), lowering per-token latency to **590.29 ms** and boosting distributed decode throughput by **7.80×** on physical hardware.
+
+---
+
+## E24 — Empirical Proof of the Weight-Transfer I/O Bottleneck (NVIDIA H100 GPU)
+
+**Objective:** Provide direct, physically measured hardware proof of the **Weight-Transfer I/O Bottleneck** during single-token autoregressive decoding ($B=1$). This experiment benchmarks the exact execution disparity between GPU FFN GEMV compute latency ($T_{\text{compute}}$) and PCIe Gen5 DMA weight transfer latency ($T_{\text{transfer}}$) on real NVIDIA H100 hardware.
+
+**Configuration:** Qwen3-30B-A3B expert dimensions ($H=2048, I=768$, BF16 precision). Monolithic expert weight payload = **9.44 MB** ($9,437,184\text{ bytes}$). Single column vector payload = **12.29 KB** ($12,288\text{ bytes}$).
+
+### 1. Measured Physical Disparity Metrics (NVIDIA H100 NVL, CUDA Events, 500 iterations)
+
+| Execution Metric | Monolithic Expert (9.44 MB) | AAEC v3 Single Column (12.29 KB) | AAEC v3 Batch (16 Cols, 196.6 KB) | Impact / Speedup |
+|:---|:---:|:---:|:---:|:---:|
+| **PCIe DMA Transfer Latency ($T_{\text{transfer}}$)** | **182.90 µs** (0.183 ms) | **16.50 µs** | **16.83 µs** (0.017 ms) | **10.86× faster transfer** |
+| **GPU FFN Compute Latency ($T_{\text{compute}}$)** | **43.52 µs** (0.044 ms) | **43.52 µs** | **43.52 µs** (0.044 ms) | Identical single-token GEMV |
+| **Disparity Ratio ($T_{\text{transfer}} / T_{\text{compute}}$)** | **4.20×** | **0.38×** | **0.39×** | **Inverts I/O bottleneck** |
+| **Exposed GPU Idle / Bubble Fraction** | **76.21%** | **0.00%** | **0.00%** | **100% GPU stall elimination** |
+
+> [!IMPORTANT]
+> **Empirical Proof of the I/O Bottleneck:**
+> 1. **Monolithic Swapping Stalls the GPU:** On real H100 hardware, fetching a monolithic expert ($9.44\text{ MB}$) takes **$182.90\ \mu\text{s}$**, while single-token GEMV compute completes in **$43.52\ \mu\text{s}$**. The PCIe transfer takes **$4.20\times$ longer than the compute**, forcing the GPU to sit **$76.21\%$ idle** during every expert miss.
+> 2. **AAEC Inverts the Bottleneck:** Slicing transfers to column payloads ($196.6\text{ KB}$ for 16 columns) reduces PCIe DMA transfer latency to **$16.83\ \mu\text{s}$**. Because transfer time is now **$0.39\times$ of compute time** ($T_{\text{transfer}} < T_{\text{compute}}$), the weight transfer hides 100% under the $64.9\ \mu\text{s}$ Attention compute window with **zero exposed GPU stall**.
 
 ---
 

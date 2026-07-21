@@ -1,0 +1,65 @@
+{
+    "hardware": "NVIDIA H100 NVL",
+    "compute_latency_us": 43.51820795238018,
+    "compute_latency_std_us": 2.171362735978992,
+    "monolithic_expert": {
+        "payload_bytes": 9437184,
+        "payload_mb": 9.0,
+        "transfer_latency_us": 182.89599917829037,
+        "transfer_latency_std_us": 1.2338018141641582,
+        "achieved_bw_gbps": 48.05497408082864,
+        "disparity_ratio": 4.202746569399742,
+        "gpu_idle_percent": 76.20603613643958
+    },
+    "column_transfers": {
+        "1": {
+            "payload_bytes": 12288,
+            "payload_kb": 12.0,
+            "t_transfer_us": 16.495199985802174,
+            "t_transfer_std_us": 1.0264566811036553,
+            "bw_gbps": 0.693783149445003
+        },
+        "8": {
+            "payload_bytes": 98304,
+            "payload_kb": 96.0,
+            "t_transfer_us": 16.36351997964084,
+            "t_transfer_std_us": 0.6455363136833666,
+            "bw_gbps": 5.594929116040317
+        },
+        "16": {
+            "payload_bytes": 196608,
+            "payload_kb": 192.0,
+            "t_transfer_us": 16.8347199074924,
+            "t_transfer_std_us": 0.9390721480733939,
+            "bw_gbps": 10.876656680727296
+        },
+        "32": {
+            "payload_bytes": 393216,
+            "payload_kb": 384.0,
+            "t_transfer_us": 18.701439974829555,
+            "t_transfer_std_us": 0.660390093871069,
+            "bw_gbps": 19.581964703941875
+        },
+        "64": {
+            "payload_bytes": 786432,
+            "payload_kb": 768.0,
+            "t_transfer_us": 22.57456005550921,
+            "t_transfer_std_us": 0.5622519188597197,
+            "bw_gbps": 32.44456916099484
+        },
+        "128": {
+            "payload_bytes": 1572864,
+            "payload_kb": 1536.0,
+            "t_transfer_us": 29.037919975817204,
+            "t_transfer_std_us": 1.1179024309689058,
+            "bw_gbps": 50.44589113889434
+        },
+        "256": {
+            "payload_bytes": 3145728,
+            "payload_kb": 3072.0,
+            "t_transfer_us": 48.59647987410426,
+            "t_transfer_std_us": 0.9562115079757565,
+            "bw_gbps": 60.28600235222285
+        }
+    }
+}
