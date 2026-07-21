@@ -3,7 +3,7 @@
 ===============================================================================
 E22 — Hardware-in-the-Loop Weight Offloading Validation (Full Fidelity)
 ===============================================================================
-Full-fidelity hardware benchmark that physically measures every AAEC systems
+Full-fidelity hardware benchmark that physically measures every COLOSSUS systems
 claim on a real NVIDIA H100 GPU.
 
 Architecture:
@@ -17,7 +17,7 @@ Architecture:
   ┌─────────────────────────────────────────────────────────────┐
   │              GPU VRAM (H100 HBM3e)                         │
   │  ┌───────────────────────────────────────────────────┐     │
-  │  │  AAEC Column Cache (OrderedDict LRU)              │     │
+  │  │  COLOSSUS Column Cache (OrderedDict LRU)              │     │
   │  │  Pre-allocated uniform slots per expert           │     │
   │  └───────────────────────────────────────────────────┘     │
   │  ┌───────────────────────────────────────────────────┐     │
@@ -740,24 +740,24 @@ def main():
     base_hr = base_totals["hits"] / max(1, base_totals["hits"] + base_totals["misses"]) * 100
     base_jpt = base_power["avg"] / base_tps if base_tps > 0 else 0
 
-    # ── AAEC Replay ──
+    # ── COLOSSUS Replay ──
     print(f"\n{'─'*90}")
-    print(f"[5/5] AAEC v3 Replay (SA-FFN + Column Cache + Two-Stream Overlap, {args.max_tokens} tokens)...")
+    print(f"[5/5] COLOSSUS v3 Replay (SA-FFN + Column Cache + Two-Stream Overlap, {args.max_tokens} tokens)...")
     power2 = PowerSampler(interval_sec=0.1)
     power2.start()
-    aaec_totals, aaec_tokens, aaec_n = run_trace_replay(
+    colossus_totals, colossus_tokens, colossus_n = run_trace_replay(
         device, store, eval_db, args.max_tokens, mha_us)
     power2.stop()
-    aaec_power = power2.stats()
+    colossus_power = power2.stats()
 
-    aaec_avg_comp = aaec_totals["compute_us"] / 1000 / aaec_n
-    aaec_avg_dma = aaec_totals["dma_us"] / 1000 / aaec_n
-    aaec_avg_stall = aaec_totals["stall_us"] / 1000 / aaec_n
-    aaec_avg_wall = aaec_totals["wall_us"] / 1000 / aaec_n
+    colossus_avg_comp = colossus_totals["compute_us"] / 1000 / colossus_n
+    colossus_avg_dma = colossus_totals["dma_us"] / 1000 / colossus_n
+    colossus_avg_stall = colossus_totals["stall_us"] / 1000 / colossus_n
+    colossus_avg_wall = colossus_totals["wall_us"] / 1000 / colossus_n
     # Wall-clock throughput: includes both compute AND DMA stall
-    aaec_tps = aaec_n / (aaec_totals["wall_us"] / 1e6) if aaec_totals["wall_us"] > 0 else 0
-    aaec_hr = aaec_totals["hits"] / max(1, aaec_totals["hits"] + aaec_totals["misses"]) * 100
-    aaec_jpt = aaec_power["avg"] / aaec_tps if aaec_tps > 0 else 0
+    colossus_tps = colossus_n / (colossus_totals["wall_us"] / 1e6) if colossus_totals["wall_us"] > 0 else 0
+    colossus_hr = colossus_totals["hits"] / max(1, colossus_totals["hits"] + colossus_totals["misses"]) * 100
+    colossus_jpt = colossus_power["avg"] / colossus_tps if colossus_tps > 0 else 0
 
     # ═══════════════════════════════════════════════════
     # Summary
@@ -787,23 +787,23 @@ def main():
               f"Wall={v['avg_wall_us']:.1f}µs  Overlap={v['overlap_pct']:.1f}%  "
               f"Exposed={v['exposed_stall_us']:.1f}µs")
 
-    print(f"\n  ── Head-to-Head Comparison ({aaec_n} tokens, real trace replay) ──")
-    print(f"  {'Metric':<30} | {'Baseline (Expert LRU)':<22} | {'AAEC v3 (Column LRU)':<22} | {'Ratio':<10}")
+    print(f"\n  ── Head-to-Head Comparison ({colossus_n} tokens, real trace replay) ──")
+    print(f"  {'Metric':<30} | {'Baseline (Expert LRU)':<22} | {'COLOSSUS v3 (Column LRU)':<22} | {'Ratio':<10}")
     print(f"  {'─'*95}")
-    print(f"  {'Avg Wall-Clock / Token':<30} | {base_avg_wall:>18.2f} ms | {aaec_avg_wall:>18.2f} ms | {base_avg_wall/max(0.001,aaec_avg_wall):>8.2f}x")
-    print(f"  {'Avg Compute / Token':<30} | {base_avg_comp:>18.2f} ms | {aaec_avg_comp:>18.2f} ms | {base_avg_comp/max(0.001,aaec_avg_comp):>8.2f}x")
-    print(f"  {'Avg DMA / Token':<30} | {base_avg_dma:>18.2f} ms | {aaec_avg_dma:>18.2f} ms | {base_avg_dma/max(0.001,aaec_avg_dma):>8.2f}x")
-    print(f"  {'Data Transferred':<30} | {base_totals['dma_bytes']/(1024**3):>17.2f} GB | {aaec_totals['dma_bytes']/(1024**3):>17.2f} GB | {base_totals['dma_bytes']/max(1,aaec_totals['dma_bytes']):>8.2f}x")
-    print(f"  {'Cache Hit Rate':<30} | {base_hr:>17.2f}%  | {aaec_hr:>17.2f}%  | {'—':>10}")
-    print(f"  {'Throughput (wall-clock)':<30} | {base_tps:>15.2f} tps  | {aaec_tps:>15.2f} tps  | {aaec_tps/max(0.001,base_tps):>8.2f}x")
-    print(f"  {'Avg GPU Power':<30} | {base_power['avg']:>17.1f} W  | {aaec_power['avg']:>17.1f} W  | {'—':>10}")
-    print(f"  {'Energy / Token':<30} | {base_jpt:>15.2f} J/t  | {aaec_jpt:>15.2f} J/t  | {base_jpt/max(0.001,aaec_jpt):>8.2f}x")
+    print(f"  {'Avg Wall-Clock / Token':<30} | {base_avg_wall:>18.2f} ms | {colossus_avg_wall:>18.2f} ms | {base_avg_wall/max(0.001,colossus_avg_wall):>8.2f}x")
+    print(f"  {'Avg Compute / Token':<30} | {base_avg_comp:>18.2f} ms | {colossus_avg_comp:>18.2f} ms | {base_avg_comp/max(0.001,colossus_avg_comp):>8.2f}x")
+    print(f"  {'Avg DMA / Token':<30} | {base_avg_dma:>18.2f} ms | {colossus_avg_dma:>18.2f} ms | {base_avg_dma/max(0.001,colossus_avg_dma):>8.2f}x")
+    print(f"  {'Data Transferred':<30} | {base_totals['dma_bytes']/(1024**3):>17.2f} GB | {colossus_totals['dma_bytes']/(1024**3):>17.2f} GB | {base_totals['dma_bytes']/max(1,colossus_totals['dma_bytes']):>8.2f}x")
+    print(f"  {'Cache Hit Rate':<30} | {base_hr:>17.2f}%  | {colossus_hr:>17.2f}%  | {'—':>10}")
+    print(f"  {'Throughput (wall-clock)':<30} | {base_tps:>15.2f} tps  | {colossus_tps:>15.2f} tps  | {colossus_tps/max(0.001,base_tps):>8.2f}x")
+    print(f"  {'Avg GPU Power':<30} | {base_power['avg']:>17.1f} W  | {colossus_power['avg']:>17.1f} W  | {'—':>10}")
+    print(f"  {'Energy / Token':<30} | {base_jpt:>15.2f} J/t  | {colossus_jpt:>15.2f} J/t  | {base_jpt/max(0.001,colossus_jpt):>8.2f}x")
     print("=" * 90)
 
     # ── Save ──
     os.makedirs(RESULTS_DIR, exist_ok=True)
     output = {
-        "gpu": gpu_name, "model": MODEL_NAME, "tokens": aaec_n,
+        "gpu": gpu_name, "model": MODEL_NAME, "tokens": colossus_n,
         "microbenchmarks": micro,
         "baseline": {
             "avg_compute_ms": base_avg_comp, "avg_dma_ms": base_avg_dma,
@@ -812,13 +812,13 @@ def main():
             "hit_rate": base_hr, "throughput_tps": base_tps,
             "power": base_power, "joules_per_token": base_jpt
         },
-        "aaec": {
-            "avg_compute_ms": aaec_avg_comp, "avg_dma_ms": aaec_avg_dma,
-            "avg_stall_ms": aaec_avg_stall, "avg_wall_ms": aaec_avg_wall,
-            "data_gb": aaec_totals["dma_bytes"] / (1024**3),
-            "hit_rate": aaec_hr, "throughput_tps": aaec_tps,
-            "power": aaec_power, "joules_per_token": aaec_jpt,
-            "per_token": aaec_tokens
+        "colossus": {
+            "avg_compute_ms": colossus_avg_comp, "avg_dma_ms": colossus_avg_dma,
+            "avg_stall_ms": colossus_avg_stall, "avg_wall_ms": colossus_avg_wall,
+            "data_gb": colossus_totals["dma_bytes"] / (1024**3),
+            "hit_rate": colossus_hr, "throughput_tps": colossus_tps,
+            "power": colossus_power, "joules_per_token": colossus_jpt,
+            "per_token": colossus_tokens
         }
     }
     with open(os.path.join(RESULTS_DIR, "e22_hwil_full_results.json"), "w") as f:

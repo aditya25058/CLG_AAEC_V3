@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ===============================================================================
-AAEC v3 Demo Suite — Standard Baseline Monolithic Expert Serving Engine
+COLOSSUS v3 Demo Suite — Standard Baseline Monolithic Expert Serving Engine
 ===============================================================================
 Replays real Qwen3-30B-A3B activation traces from SQLite database.
 Models monolithic expert-level offloading using a true OrderedDict LRU cache.

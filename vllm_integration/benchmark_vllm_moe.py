@@ -27,7 +27,7 @@ def run_benchmark(batch_size: int, hidden_size: int, intermediate_size: int, num
     topk_ids = torch.topk(torch.rand(batch_size, num_experts, device=device), top_k, dim=-1).indices.to(torch.int32)
     
     # ─── BENCHMARK 1: Standard vLLM Baseline ───
-    os.environ["ENABLE_AAEC"] = "0"
+    os.environ["ENABLE_COLOSSUS"] = "0"
     
     # Warmup
     for _ in range(5):
@@ -46,10 +46,10 @@ def run_benchmark(batch_size: int, hidden_size: int, intermediate_size: int, num
     
     baseline_time = start_event.elapsed_time(end_event) / 20.0
     
-    # ─── BENCHMARK 2: AAEC Pipelined Offloading ───
-    os.environ["ENABLE_AAEC"] = "1"
-    os.environ["AAEC_NUM_LAYERS"] = "1"
-    os.environ["AAEC_CACHE_SIZE"] = "512" # Cache 512 out of 768 columns
+    # ─── BENCHMARK 2: COLOSSUS Pipelined Offloading ───
+    os.environ["ENABLE_COLOSSUS"] = "1"
+    os.environ["COLOSSUS_NUM_LAYERS"] = "1"
+    os.environ["COLOSSUS_CACHE_SIZE"] = "512" # Cache 512 out of 768 columns
     
     # Warmup
     for _ in range(5):
@@ -63,22 +63,22 @@ def run_benchmark(batch_size: int, hidden_size: int, intermediate_size: int, num
     end_event.record()
     torch.cuda.synchronize()
     
-    aaec_time = start_event.elapsed_time(end_event) / 20.0
+    colossus_time = start_event.elapsed_time(end_event) / 20.0
     
-    speedup = baseline_time / aaec_time
+    speedup = baseline_time / colossus_time
     
-    print(f"| {batch_size:<10} | {baseline_time:12.3f} | {aaec_time:8.3f} | {speedup:7.2f}x |")
+    print(f"| {batch_size:<10} | {baseline_time:12.3f} | {colossus_time:8.3f} | {speedup:7.2f}x |")
 
 def main():
     print("==========================================================================")
-    print("Benchmarking Physical vLLM MoE Layer vs. AAEC Caching Policy")
+    print("Benchmarking Physical vLLM MoE Layer vs. COLOSSUS Caching Policy")
     print("==========================================================================")
     print("Model Parameters: Qwen3-30B-A3B (128 Experts, Top-8 Routing)")
     print(f"  - Hidden Size: 2048, Intermediate Size per Expert: 768")
-    print(f"  - AAEC Cache Size: 512 columns (66.7% cached in VRAM)")
-    print(f"  - AAEC Miss Size: 16 columns dynamically fetched over PCIe")
+    print(f"  - COLOSSUS Cache Size: 512 columns (66.7% cached in VRAM)")
+    print(f"  - COLOSSUS Miss Size: 16 columns dynamically fetched over PCIe")
     print("==========================================================================")
-    print(f"| {'Tokens (M)':<10} | {'vLLM (ms)':<12} | {'AAEC (ms)':<8} | {'Speedup':<8} |")
+    print(f"| {'Tokens (M)':<10} | {'vLLM (ms)':<12} | {'COLOSSUS (ms)':<8} | {'Speedup':<8} |")
     print("--------------------------------------------------------------------------")
     
     # Sweep batch sizes (representing token batch sizes inside vLLM decode/prefill loops)

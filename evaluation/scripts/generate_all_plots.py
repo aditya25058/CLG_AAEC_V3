@@ -144,16 +144,16 @@ def plot_e12_scalability():
 def plot_e13_distributed():
     print("Plotting E13 Distributed Serving Results...")
     models = ["qwen3_30b", "deepseek_v2_lite"]
-    systems = ["demand", "expert_cache", "aaec_column_cache"]
+    systems = ["demand", "expert_cache", "colossus_column_cache"]
     labels = {
         "demand": "Demand-Only",
         "expert_cache": "Expert-Level Cache",
-        "aaec_column_cache": "AAEC Column Cache"
+        "colossus_column_cache": "COLOSSUS Column Cache"
     }
     colors = {
         "demand": "#D32F2F",          # red
         "expert_cache": "#FBC02D",    # yellow/gold
-        "aaec_column_cache": "#1976D2" # blue
+        "colossus_column_cache": "#1976D2" # blue
     }
     
     for m in models:
@@ -283,7 +283,7 @@ def plot_e17_amortized():
         width = 0.35
         
         ax.bar(x - width/2, dense_tot, width, label="Dense FFN + Full Expert Load (Baseline)", color="#D32F2F")
-        ax.bar(x + width/2, sa_tot, width, label="SA-FFN + Column Miss Load (AAEC)", color="#1976D2")
+        ax.bar(x + width/2, sa_tot, width, label="SA-FFN + Column Miss Load (COLOSSUS)", color="#1976D2")
         
         ax.set_ylabel("Total System Time per Layer (ms)")
         ax.set_xlabel("Batch Size")
@@ -313,7 +313,7 @@ def plot_e18_sweep():
         exp_stalls = [entry["avg_stall_ms"] for entry in data["expert_level"]]
         
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(accuracies, col_stalls, marker="o", label="AAEC Column-Level Cache", color="#1976D2", linewidth=1.5)
+        ax.plot(accuracies, col_stalls, marker="o", label="COLOSSUS Column-Level Cache", color="#1976D2", linewidth=1.5)
         ax.plot(accuracies, exp_stalls, marker="s", label="Expert-Level Cache", color="#D32F2F", linewidth=1.5)
         
         ax.set_xlabel("Predictor Accuracy (%)")

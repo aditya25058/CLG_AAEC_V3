@@ -2,9 +2,9 @@
 # evaluation/run_all.sh
 set -e
 
-# Master runner for the AAEC v3 Rigorous Evaluation Suite
+# Master runner for the COLOSSUS v3 Rigorous Evaluation Suite
 echo "======================================================================"
-echo "AAEC v3 serve engine rigorous evaluation plan master execution"
+echo "COLOSSUS v3 serve engine rigorous evaluation plan master execution"
 echo "======================================================================"
 
 # Determine base dir
@@ -53,7 +53,7 @@ echo "Generating all plots..."
 python3 -u ${BASE_DIR}/scripts/generate_all_plots.py
 
 echo "======================================================================"
-echo "AAEC v3 evaluation completed successfully!"
+echo "COLOSSUS v3 evaluation completed successfully!"
 echo "All results saved to: evaluation/results/"
 echo "All plots saved to:   evaluation/plots/"
 echo "======================================================================"

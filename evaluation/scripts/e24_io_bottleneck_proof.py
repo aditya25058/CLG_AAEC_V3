@@ -192,7 +192,7 @@ def run_io_bottleneck_proof():
     print(f"  • Exposed GPU Stall Time per Expert Miss         : {exposed_stall_expert_us:.2f} µs ({exposed_stall_expert_us/1000:.3f} ms)")
     print(f"  • Physical GPU Idle / Bubble Fraction            : {idle_fraction_expert:.2f}%")
 
-    print(f"\n  ── AAEC v3 COLUMN-GRANULAR OFFLOADING (Single Column = 12.29 KB) ──")
+    print(f"\n  ── COLOSSUS v3 COLUMN-GRANULAR OFFLOADING (Single Column = 12.29 KB) ──")
     t_single_col_us = col_results[1]["t_transfer_us"]
     ratio_single_col = t_single_col_us / t_compute_us
     speedup_single_col = t_expert_us / t_single_col_us
@@ -201,7 +201,7 @@ def run_io_bottleneck_proof():
     print(f"  • Transfer-to-Compute Ratio (T_col / T_comp)      : {ratio_single_col:.2f}×")
     print(f"  • Transfer Speedup over Monolithic Expert        : {speedup_single_col:.2f}× faster")
 
-    print(f"\n  ── AAEC v3 BATCHED MISSED COLUMN OFFLOADING (Typical 16-Column Miss = 196.6 KB) ──")
+    print(f"\n  ── COLOSSUS v3 BATCHED MISSED COLUMN OFFLOADING (Typical 16-Column Miss = 196.6 KB) ──")
     t_16col_us = col_results[16]["t_transfer_us"]
     ratio_16col = t_16col_us / t_compute_us
     speedup_16col = t_expert_us / t_16col_us
@@ -212,7 +212,7 @@ def run_io_bottleneck_proof():
     print(f"  • Transfer Speedup over Monolithic Expert        : {speedup_16col:.2f}× payload speedup")
 
     print(f"\n  ── HEAD-TO-HEAD BOTTLENECK COMPARISON SUMMARY ──")
-    print(f"  {'Metric':<42} | {'Monolithic Expert (9.44 MB)':<27} | {'AAEC v3 Batch (16 cols, 196.6 KB)':<32}")
+    print(f"  {'Metric':<42} | {'Monolithic Expert (9.44 MB)':<27} | {'COLOSSUS v3 Batch (16 cols, 196.6 KB)':<32}")
     print("  " + "─" * 105)
     print(f"  {'PCIe Transfer Latency (T_transfer)':<42} | {t_expert_us/1000:>23.3f} ms | {t_16col_us/1000:>28.3f} ms")
     print(f"  {'GPU Compute Latency (T_compute)':<42} | {t_compute_us/1000:>23.4f} ms | {t_compute_us/1000:>28.4f} ms")

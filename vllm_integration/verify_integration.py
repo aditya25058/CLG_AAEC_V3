@@ -6,11 +6,11 @@ import os
 # Enable importing from the local folder
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from fused_moe_aaec import FusedMoEWithAAEC, CacheController
+from fused_moe_colossus import FusedMoEWithCOLOSSUS, CacheController
 
 def main():
     print("======================================================================")
-    print("Verifying vLLM AAEC Integration Modules Compatibility")
+    print("Verifying vLLM COLOSSUS Integration Modules Compatibility")
     print("======================================================================")
     
     device = torch.device("cuda:0")
@@ -33,8 +33,8 @@ def main():
     )
     print("   -> Cache Controller successfully initialized.")
     
-    print("2. Initializing FusedMoEWithAAEC layer class...")
-    moe_layer = FusedMoEWithAAEC(
+    print("2. Initializing FusedMoEWithCOLOSSUS layer class...")
+    moe_layer = FusedMoEWithCOLOSSUS(
         layer_idx=0,
         num_experts=num_experts,
         top_k=top_k,
@@ -69,7 +69,7 @@ def main():
         print(f"   -> Forward pass execution succeeded.")
         print(f"   -> Output Tensor Shape: {y.shape}")
         print(f"   -> Average execution time: {elapsed_time:.3f} ms")
-        print("\n[SUCCESS] AAEC integration modules are compilation-ready and compatible with Triton/PyTorch serving.")
+        print("\n[SUCCESS] COLOSSUS integration modules are compilation-ready and compatible with Triton/PyTorch serving.")
     except Exception as e:
         print(f"\n[ERROR] Forward pass failed: {e}")
         import traceback

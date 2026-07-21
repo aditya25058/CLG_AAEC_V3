@@ -1,0 +1,280 @@
+{
+    "sweep1": {
+        "1": {
+            "BALANCED": {
+                "total_latency_s": 11.31,
+                "prompt_thru_tok_s": 13.62,
+                "gen_thru_tok_s": 113.17,
+                "token_thru_tok_s": 126.79,
+                "avg_ttft_ms": 146.8,
+                "avg_tpot_ms": 87.9,
+                "avg_itl_ms": 87.9
+            },
+            "RAND": {
+                "total_latency_s": 8.916,
+                "prompt_thru_tok_s": 17.27,
+                "gen_thru_tok_s": 143.57,
+                "token_thru_tok_s": 160.84,
+                "avg_ttft_ms": 146.8,
+                "avg_tpot_ms": 69.05,
+                "avg_itl_ms": 69.05
+            },
+            "DATASET": {
+                "total_latency_s": 7.176,
+                "prompt_thru_tok_s": 21.46,
+                "gen_thru_tok_s": 178.37,
+                "token_thru_tok_s": 199.83,
+                "avg_ttft_ms": 103.32,
+                "avg_tpot_ms": 55.69,
+                "avg_itl_ms": 55.69
+            }
+        },
+        "2": {
+            "BALANCED": {
+                "total_latency_s": 6.185,
+                "prompt_thru_tok_s": 24.9,
+                "gen_thru_tok_s": 206.95,
+                "token_thru_tok_s": 231.85,
+                "avg_ttft_ms": 79.02,
+                "avg_tpot_ms": 48.08,
+                "avg_itl_ms": 48.08
+            },
+            "RAND": {
+                "total_latency_s": 5.229,
+                "prompt_thru_tok_s": 29.45,
+                "gen_thru_tok_s": 244.79,
+                "token_thru_tok_s": 274.24,
+                "avg_ttft_ms": 79.05,
+                "avg_tpot_ms": 40.54,
+                "avg_itl_ms": 40.54
+            },
+            "DATASET": {
+                "total_latency_s": 4.372,
+                "prompt_thru_tok_s": 35.23,
+                "gen_thru_tok_s": 292.78,
+                "token_thru_tok_s": 328.0,
+                "avg_ttft_ms": 59.07,
+                "avg_tpot_ms": 33.96,
+                "avg_itl_ms": 33.96
+            }
+        },
+        "4": {
+            "BALANCED": {
+                "total_latency_s": 3.697,
+                "prompt_thru_tok_s": 41.66,
+                "gen_thru_tok_s": 346.26,
+                "token_thru_tok_s": 387.92,
+                "avg_ttft_ms": 45.02,
+                "avg_tpot_ms": 28.75,
+                "avg_itl_ms": 28.75
+            },
+            "RAND": {
+                "total_latency_s": 3.341,
+                "prompt_thru_tok_s": 46.1,
+                "gen_thru_tok_s": 383.14,
+                "token_thru_tok_s": 429.24,
+                "avg_ttft_ms": 45.04,
+                "avg_tpot_ms": 25.95,
+                "avg_itl_ms": 25.95
+            },
+            "DATASET": {
+                "total_latency_s": 2.99,
+                "prompt_thru_tok_s": 51.5,
+                "gen_thru_tok_s": 428.03,
+                "token_thru_tok_s": 479.52,
+                "avg_ttft_ms": 37.72,
+                "avg_tpot_ms": 23.25,
+                "avg_itl_ms": 23.25
+            }
+        },
+        "8": {
+            "BALANCED": {
+                "total_latency_s": 2.533,
+                "prompt_thru_tok_s": 60.79,
+                "gen_thru_tok_s": 505.3,
+                "token_thru_tok_s": 566.09,
+                "avg_ttft_ms": 29.9,
+                "avg_tpot_ms": 19.71,
+                "avg_itl_ms": 19.71
+            },
+            "RAND": {
+                "total_latency_s": 2.566,
+                "prompt_thru_tok_s": 60.01,
+                "gen_thru_tok_s": 498.78,
+                "token_thru_tok_s": 558.79,
+                "avg_ttft_ms": 29.99,
+                "avg_tpot_ms": 19.97,
+                "avg_itl_ms": 19.97
+            },
+            "DATASET": {
+                "total_latency_s": 2.372,
+                "prompt_thru_tok_s": 64.93,
+                "gen_thru_tok_s": 539.7,
+                "token_thru_tok_s": 604.63,
+                "avg_ttft_ms": 28.77,
+                "avg_tpot_ms": 18.45,
+                "avg_itl_ms": 18.45
+            }
+        }
+    },
+    "sweep2": {
+        "1.0": {
+            "0.0": {
+                "total_latency_s": 6.506,
+                "prompt_thru_tok_s": 23.67,
+                "gen_thru_tok_s": 196.75,
+                "token_thru_tok_s": 220.42,
+                "avg_ttft_ms": 216.35,
+                "avg_tpot_ms": 49.51,
+                "avg_itl_ms": 49.51
+            },
+            "0.2": {
+                "total_latency_s": 6.732,
+                "prompt_thru_tok_s": 22.88,
+                "gen_thru_tok_s": 190.14,
+                "token_thru_tok_s": 213.02,
+                "avg_ttft_ms": 230.7,
+                "avg_tpot_ms": 51.19,
+                "avg_itl_ms": 51.19
+            },
+            "0.5": {
+                "total_latency_s": 6.919,
+                "prompt_thru_tok_s": 22.26,
+                "gen_thru_tok_s": 185.0,
+                "token_thru_tok_s": 207.26,
+                "avg_ttft_ms": 225.51,
+                "avg_tpot_ms": 52.7,
+                "avg_itl_ms": 52.7
+            },
+            "0.8": {
+                "total_latency_s": 6.961,
+                "prompt_thru_tok_s": 22.12,
+                "gen_thru_tok_s": 183.88,
+                "token_thru_tok_s": 206.01,
+                "avg_ttft_ms": 214.37,
+                "avg_tpot_ms": 53.12,
+                "avg_itl_ms": 53.12
+            }
+        },
+        "32.0": {
+            "0.0": {
+                "total_latency_s": 5.184,
+                "prompt_thru_tok_s": 29.7,
+                "gen_thru_tok_s": 246.9,
+                "token_thru_tok_s": 276.6,
+                "avg_ttft_ms": 69.28,
+                "avg_tpot_ms": 40.27,
+                "avg_itl_ms": 40.27
+            },
+            "0.2": {
+                "total_latency_s": 5.48,
+                "prompt_thru_tok_s": 28.1,
+                "gen_thru_tok_s": 233.6,
+                "token_thru_tok_s": 261.7,
+                "avg_ttft_ms": 91.75,
+                "avg_tpot_ms": 42.42,
+                "avg_itl_ms": 42.42
+            },
+            "0.5": {
+                "total_latency_s": 5.769,
+                "prompt_thru_tok_s": 26.69,
+                "gen_thru_tok_s": 221.88,
+                "token_thru_tok_s": 248.57,
+                "avg_ttft_ms": 98.46,
+                "avg_tpot_ms": 44.65,
+                "avg_itl_ms": 44.65
+            },
+            "0.8": {
+                "total_latency_s": 5.91,
+                "prompt_thru_tok_s": 26.06,
+                "gen_thru_tok_s": 216.59,
+                "token_thru_tok_s": 242.65,
+                "avg_ttft_ms": 99.66,
+                "avg_tpot_ms": 45.75,
+                "avg_itl_ms": 45.75
+            }
+        }
+    },
+    "sweep3": {
+        "1.0": {
+            "True": {
+                "total_latency_s": 7609.484,
+                "prompt_thru_tok_s": 0.02,
+                "gen_thru_tok_s": 0.17,
+                "token_thru_tok_s": 0.19,
+                "avg_ttft_ms": 137470.05,
+                "avg_tpot_ms": 58834.75,
+                "avg_itl_ms": 58834.75
+            },
+            "False": {
+                "total_latency_s": 5.692,
+                "prompt_thru_tok_s": 27.06,
+                "gen_thru_tok_s": 224.89,
+                "token_thru_tok_s": 251.94,
+                "avg_ttft_ms": 171.17,
+                "avg_tpot_ms": 43.47,
+                "avg_itl_ms": 43.47
+            }
+        },
+        "4.0": {
+            "True": {
+                "total_latency_s": 1909.444,
+                "prompt_thru_tok_s": 0.08,
+                "gen_thru_tok_s": 0.67,
+                "token_thru_tok_s": 0.75,
+                "avg_ttft_ms": 34488.82,
+                "avg_tpot_ms": 14763.42,
+                "avg_itl_ms": 14763.42
+            },
+            "False": {
+                "total_latency_s": 4.972,
+                "prompt_thru_tok_s": 30.97,
+                "gen_thru_tok_s": 257.43,
+                "token_thru_tok_s": 288.4,
+                "avg_ttft_ms": 88.51,
+                "avg_tpot_ms": 38.45,
+                "avg_itl_ms": 38.45
+            }
+        },
+        "16.0": {
+            "True": {
+                "total_latency_s": 484.434,
+                "prompt_thru_tok_s": 0.32,
+                "gen_thru_tok_s": 2.64,
+                "token_thru_tok_s": 2.96,
+                "avg_ttft_ms": 8743.52,
+                "avg_tpot_ms": 3745.59,
+                "avg_itl_ms": 3745.59
+            },
+            "False": {
+                "total_latency_s": 4.799,
+                "prompt_thru_tok_s": 32.09,
+                "gen_thru_tok_s": 266.74,
+                "token_thru_tok_s": 298.83,
+                "avg_ttft_ms": 68.21,
+                "avg_tpot_ms": 37.25,
+                "avg_itl_ms": 37.25
+            }
+        },
+        "32.0": {
+            "True": {
+                "total_latency_s": 246.932,
+                "prompt_thru_tok_s": 0.62,
+                "gen_thru_tok_s": 5.18,
+                "token_thru_tok_s": 5.81,
+                "avg_ttft_ms": 4452.63,
+                "avg_tpot_ms": 1909.28,
+                "avg_itl_ms": 1909.28
+            },
+            "False": {
+                "total_latency_s": 4.77,
+                "prompt_thru_tok_s": 32.28,
+                "gen_thru_tok_s": 268.33,
+                "token_thru_tok_s": 300.62,
+                "avg_ttft_ms": 65.0,
+                "avg_tpot_ms": 37.05,
+                "avg_itl_ms": 37.05
+            }
+        }
+    }
+}

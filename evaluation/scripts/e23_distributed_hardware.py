@@ -299,21 +299,21 @@ def run_distributed_benchmark(max_tokens=15):
     BASE_CAP = 384
 
     # Performance counters
-    aaec_totals = {"wall_us": 0, "compute_us": 0, "pcie_bytes": 0, "net_bytes": 0, "hits": 0, "misses": 0}
+    colossus_totals = {"wall_us": 0, "compute_us": 0, "pcie_bytes": 0, "net_bytes": 0, "hits": 0, "misses": 0}
     base_totals = {"wall_us": 0, "compute_us": 0, "pcie_bytes": 0, "net_bytes": 0, "hits": 0, "misses": 0}
 
     # Inter-node transfer speed from physical measurement: 512 KB transfer time
     net_1mb_one_way_us = net_results.get(512 * 1024, {}).get("one_way_us", 450.0)
 
-    print(f"\n  {'Tok':<4} | {'Baseline (4 H100s)':>22} | {'AAEC v3 (4 H100s)':>22} | {'Speedup':>10}")
+    print(f"\n  {'Tok':<4} | {'Baseline (4 H100s)':>22} | {'COLOSSUS v3 (4 H100s)':>22} | {'Speedup':>10}")
     print(f"  {'':<4} | {'Wall (ms)':>10} {'Net (MB)':>11} | {'Wall (ms)':>10} {'Net (MB)':>11} |")
     print("  " + "-" * 75)
 
     for idx, t_pos in enumerate(t_positions):
-        # ── AAEC 4-H100 Step ──
-        aaec_wall_us = 0
-        aaec_net_bytes = 0
-        aaec_pcie_bytes = 0
+        # ── COLOSSUS 4-H100 Step ──
+        colossus_wall_us = 0
+        colossus_net_bytes = 0
+        colossus_pcie_bytes = 0
 
         # ── Baseline 4-H100 Step ──
         base_wall_us = 0
@@ -329,22 +329,22 @@ def run_distributed_benchmark(max_tokens=15):
             target_rank = layer // 12  # 0, 1, 2, 3
             is_remote_node = (target_rank >= 2)
 
-            # AAEC cache lookup
+            # COLOSSUS cache lookup
             layer_misses = 0
             for exp_id, active_cols in experts_at_step:
                 for col in active_cols:
                     k = (layer, exp_id, col)
                     if k in column_cache:
                         column_cache.move_to_end(k)
-                        aaec_totals["hits"] += 1
+                        colossus_totals["hits"] += 1
                     else:
-                        aaec_totals["misses"] += 1
+                        colossus_totals["misses"] += 1
                         layer_misses += 1
                         if len(column_cache) >= CACHE_CAP:
                             column_cache.popitem(last=False)
                         column_cache[k] = True
 
-            # AAEC Layer Compute (Real GPU timing on local H100)
+            # COLOSSUS Layer Compute (Real GPU timing on local H100)
             dev = device0 if target_rank % 2 == 0 else device1
             s = torch.cuda.Event(enable_timing=True)
             e = torch.cuda.Event(enable_timing=True)
@@ -358,16 +358,16 @@ def run_distributed_benchmark(max_tokens=15):
             miss_bytes = layer_misses * HIDDEN_SIZE * 2 * 3
             if is_remote_node:
                 # Inter-node transfer over Ethernet TCP
-                aaec_net_bytes += miss_bytes
+                colossus_net_bytes += miss_bytes
                 net_transfer_us = (miss_bytes / (512 * 1024)) * net_1mb_one_way_us
                 layer_wall = comp_us + net_transfer_us
             else:
                 # Intra-node PCIe Gen5 transfer
-                aaec_pcie_bytes += miss_bytes
+                colossus_pcie_bytes += miss_bytes
                 pcie_us = (miss_bytes / (256 * 1024)) * 23.0  # 23 us per 256 KB
                 layer_wall = comp_us + max(0, pcie_us - 65.0)  # MHA overlap
 
-            aaec_wall_us += layer_wall
+            colossus_wall_us += layer_wall
 
             # Baseline Layer Calculation
             active_exps = {e for e, _ in experts_at_step}
@@ -396,31 +396,31 @@ def run_distributed_benchmark(max_tokens=15):
 
             base_wall_us += base_wall
 
-        aaec_totals["wall_us"] += aaec_wall_us
-        aaec_totals["net_bytes"] += aaec_net_bytes
-        aaec_totals["pcie_bytes"] += aaec_pcie_bytes
+        colossus_totals["wall_us"] += colossus_wall_us
+        colossus_totals["net_bytes"] += colossus_net_bytes
+        colossus_totals["pcie_bytes"] += colossus_pcie_bytes
 
         base_totals["wall_us"] += base_wall_us
         base_totals["net_bytes"] += base_net_bytes
         base_totals["pcie_bytes"] += base_pcie_bytes
 
-        speedup = base_wall_us / max(1, aaec_wall_us)
+        speedup = base_wall_us / max(1, colossus_wall_us)
         print(f"  {idx+1:<4} | {base_wall_us/1000:>10.2f} {base_net_bytes/(1024**2):>10.2f} | "
-              f"{aaec_wall_us/1000:>10.2f} {aaec_net_bytes/(1024**2):>10.2f} | {speedup:>9.2f}x")
+              f"{colossus_wall_us/1000:>10.2f} {colossus_net_bytes/(1024**2):>10.2f} | {speedup:>9.2f}x")
 
     power.stop()
     power_stats = power.stats()
 
     # ── Summary Metrics ──
     base_avg_wall_ms = base_totals["wall_us"] / 1000 / n_tokens
-    aaec_avg_wall_ms = aaec_totals["wall_us"] / 1000 / n_tokens
+    colossus_avg_wall_ms = colossus_totals["wall_us"] / 1000 / n_tokens
 
     base_tps = n_tokens / (base_totals["wall_us"] / 1e6)
-    aaec_tps = n_tokens / (aaec_totals["wall_us"] / 1e6)
+    colossus_tps = n_tokens / (colossus_totals["wall_us"] / 1e6)
 
     total_power_4_h100 = power_stats["avg"] * 2.0  # 2 nodes × power
     base_jpt = total_power_4_h100 / base_tps
-    aaec_jpt = total_power_4_h100 / aaec_tps
+    colossus_jpt = total_power_4_h100 / colossus_tps
 
     print("\n" + "=" * 90)
     print("📊 E23 — PHYSICAL DISTRIBUTED MULTI-NODE RESULTS (2 NODES × 4 H100 GPUs)")
@@ -431,14 +431,14 @@ def run_distributed_benchmark(max_tokens=15):
     print(f"  Interconnect: Physical Ethernet TCP ({net_results.get(512*1024, {}).get('bw_mbps', 0):.2f} MB/s)")
 
     print(f"\n  ── Head-to-Head 4-H100 Distributed Comparison ({n_tokens} tokens) ──")
-    print(f"  {'Metric':<35} | {'Baseline (4 H100s)':<20} | {'AAEC v3 (4 H100s)':<20} | {'Ratio':<10}")
+    print(f"  {'Metric':<35} | {'Baseline (4 H100s)':<20} | {'COLOSSUS v3 (4 H100s)':<20} | {'Ratio':<10}")
     print(f"  {'─'*95}")
-    print(f"  {'Avg Wall-Clock Latency / Token':<35} | {base_avg_wall_ms:>16.2f} ms | {aaec_avg_wall_ms:>16.2f} ms | {base_avg_wall_ms/aaec_avg_wall_ms:>8.2f}x")
-    print(f"  {'Inter-Node Network Traffic':<35} | {base_totals['net_bytes']/(1024**3):>15.2f} GB | {aaec_totals['net_bytes']/(1024**3):>15.2f} GB | {base_totals['net_bytes']/max(1,aaec_totals['net_bytes']):>8.2f}x")
-    print(f"  {'Intra-Node PCIe Traffic':<35} | {base_totals['pcie_bytes']/(1024**3):>15.2f} GB | {aaec_totals['pcie_bytes']/(1024**3):>15.2f} GB | {base_totals['pcie_bytes']/max(1,aaec_totals['pcie_bytes']):>8.2f}x")
-    print(f"  {'Distributed Throughput (Wall)':<35} | {base_tps:>13.2f} tps | {aaec_tps:>13.2f} tps | {aaec_tps/base_tps:>8.2f}x")
+    print(f"  {'Avg Wall-Clock Latency / Token':<35} | {base_avg_wall_ms:>16.2f} ms | {colossus_avg_wall_ms:>16.2f} ms | {base_avg_wall_ms/colossus_avg_wall_ms:>8.2f}x")
+    print(f"  {'Inter-Node Network Traffic':<35} | {base_totals['net_bytes']/(1024**3):>15.2f} GB | {colossus_totals['net_bytes']/(1024**3):>15.2f} GB | {base_totals['net_bytes']/max(1,colossus_totals['net_bytes']):>8.2f}x")
+    print(f"  {'Intra-Node PCIe Traffic':<35} | {base_totals['pcie_bytes']/(1024**3):>15.2f} GB | {colossus_totals['pcie_bytes']/(1024**3):>15.2f} GB | {base_totals['pcie_bytes']/max(1,colossus_totals['pcie_bytes']):>8.2f}x")
+    print(f"  {'Distributed Throughput (Wall)':<35} | {base_tps:>13.2f} tps | {colossus_tps:>13.2f} tps | {colossus_tps/base_tps:>8.2f}x")
     print(f"  {'Total 4-H100 Cluster Power':<35} | {total_power_4_h100:>15.1f} W  | {total_power_4_h100:>15.1f} W  | {'—':>10}")
-    print(f"  {'Cluster Energy / Token':<35} | {base_jpt:>13.2f} J/t | {aaec_jpt:>13.2f} J/t | {base_jpt/aaec_jpt:>8.2f}x")
+    print(f"  {'Cluster Energy / Token':<35} | {base_jpt:>13.2f} J/t | {colossus_jpt:>13.2f} J/t | {base_jpt/colossus_jpt:>8.2f}x")
     print("=" * 90)
 
     # Save
@@ -454,11 +454,11 @@ def run_distributed_benchmark(max_tokens=15):
             "pcie_gb": base_totals["pcie_bytes"] / (1024**3),
             "joules_per_token": base_jpt
         },
-        "aaec_4_h100": {
-            "avg_wall_ms": aaec_avg_wall_ms, "tps": aaec_tps,
-            "net_gb": aaec_totals["net_bytes"] / (1024**3),
-            "pcie_gb": aaec_totals["pcie_bytes"] / (1024**3),
-            "joules_per_token": aaec_jpt
+        "colossus_4_h100": {
+            "avg_wall_ms": colossus_avg_wall_ms, "tps": colossus_tps,
+            "net_gb": colossus_totals["net_bytes"] / (1024**3),
+            "pcie_gb": colossus_totals["pcie_bytes"] / (1024**3),
+            "joules_per_token": colossus_jpt
         }
     }
     with open(os.path.join(RESULTS_DIR, "e23_distributed_results.json"), "w") as f:

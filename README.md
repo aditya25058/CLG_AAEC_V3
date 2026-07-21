@@ -1,5 +1,5 @@
-# The Evolved AAEC Serving Engine: Bandwidth-Budgeted Multi-Expert Speculative Prefetching (BMESP)
-## Systems & Architectural Report (AAEC v3)
+# The Evolved COLOSSUS Serving Engine: Bandwidth-Budgeted Multi-Expert Speculative Prefetching (BMESP)
+## Systems & Architectural Report (COLOSSUS v3)
 
 ---
 
@@ -10,8 +10,8 @@ Run real-time, token-by-token generation demos directly from the terminal:
 # 1. Standard Baseline (Full-Expert Monolithic Offloading)
 python3 serve_qwen3_baseline.py --max-tokens 20
 
-# 2. AAEC v3 Serving Engine (Column-Granular Caching + Fused Triton SA-FFN)
-python3 serve_qwen3_aaec.py --max-tokens 20
+# 2. COLOSSUS v3 Serving Engine (Column-Granular Caching + Fused Triton SA-FFN)
+python3 serve_qwen3_colossus.py --max-tokens 20
 ```
 
 ---
@@ -20,11 +20,11 @@ python3 serve_qwen3_aaec.py --max-tokens 20
 
  Mixture-of-Experts (MoE) serving engines on offloaded edge/node systems suffer from severe memory bandwidth bottlenecks. Traditional predictive prefetchers target the feed-forward network (FFN) block boundary. However, during single-batch autoregressive decoding (B=1), the local FFN compute time (GEMV on cached resident columns) takes **< 0.5 µs**, whereas transferring missed columns over PCIe Gen5 takes **12-15 µs**. This timing gap creates a massive GPU stall, leaving the GPU idle for over 95% of the transfer window.
 
-The **Evolved AAEC v3 serving engine** resolves this timing fallacy by shifting the prefetching trigger to a **Pre-Attention Router** and hiding weight transfers behind the **Attention block computation (50-150 µs)** of the same layer. 
+The **Evolved COLOSSUS v3 serving engine** resolves this timing fallacy by shifting the prefetching trigger to a **Pre-Attention Router** and hiding weight transfers behind the **Attention block computation (50-150 µs)** of the same layer. 
 
-By operating at the fine granularity of **individual column packets (30.72 KB)** rather than monolithic experts (9.44 MB), AAEC v3 implements **Bandwidth-Budgeted Multi-Expert Speculative Prefetching (BMESP)**. AAEC reduces remote MoE communication by roughly an order of magnitude, converting a large communication bottleneck into a substantially smaller one through column-granular transfer and overlap. The union of speculative missed columns across multiple candidate experts is small enough to fit entirely within the attention hiding window, yielding highly latency-hiding decoding without model quality degradation.
+By operating at the fine granularity of **individual column packets (30.72 KB)** rather than monolithic experts (9.44 MB), COLOSSUS v3 implements **Bandwidth-Budgeted Multi-Expert Speculative Prefetching (BMESP)**. COLOSSUS reduces remote MoE communication by roughly an order of magnitude, converting a large communication bottleneck into a substantially smaller one through column-granular transfer and overlap. The union of speculative missed columns across multiple candidate experts is small enough to fit entirely within the attention hiding window, yielding highly latency-hiding decoding without model quality degradation.
 
-![AAEC v3 Pipeline Architecture Diagram](evaluation/plots/architecture/aaec_pipeline_architecture.png)
+![COLOSSUS v3 Pipeline Architecture Diagram](evaluation/plots/architecture/colossus_pipeline_architecture.png)
 
 ---
 
@@ -87,7 +87,7 @@ In distributed multi-node serving, where inter-node network latency dominates, t
 
 ## 4. Layer 3: Memory & Caching System
 
-![AAEC v3 Column-Granular Offloading vs Monolithic Offloading](evaluation/plots/architecture/column_granular_offloading.png)
+![COLOSSUS v3 Column-Granular Offloading vs Monolithic Offloading](evaluation/plots/architecture/column_granular_offloading.png)
 
 The memory and caching system manages physical storage layout, cache residency, and eviction policies:
 
@@ -98,7 +98,7 @@ To resolve the logical contradiction between dynamic column access and contiguou
 3.  **Dynamically Contiguous Cold Partition:** Missed columns are DMA-copied into a pre-allocated contiguous receiving buffer in HBM. The Triton Gather-GEMM kernel executes on this contiguous destination buffer, achieving maximum warp coalescing and Tensor Core utilization.
 
 ### B. Hierarchical Caching (Memory Levels)
-AAEC v3 partitions expert weights column-wise across three evaluated memory levels:
+COLOSSUS v3 partitions expert weights column-wise across three evaluated memory levels:
 *   **T2 (Local GPU HBM):** Local VRAM cache — primary residence for hot columns.
 *   **T3 (Neighbor GPU VRAM via NVLink):** Pulled dynamically over NVLink (450 GB/s). This is the target deployment interconnect for latency-hidden serving.
 *   **T4 (Local Host DRAM via PCIe):** Pulled dynamically over PCIe Gen5 (64 GB/s). This is the interconnect used in all empirical evaluations in this work.
@@ -107,7 +107,7 @@ AAEC v3 partitions expert weights column-wise across three evaluated memory leve
 > **Extended memory tiers (not evaluated):** T1 (on-chip SRAM pinning) and T5 (remote DRAM via RDMA) are described for architectural completeness in multi-node deployments but are not empirically evaluated in this work. All measurements use T2-T4.
 
 ### C. Cache Eviction Policy: LRU
-AAEC v3 uses standard **Least Recently Used (LRU)** eviction for its column-level cache. Empirical evaluation (E04, E11) demonstrates that LRU achieves a **58.36% hit rate** at cache size 32 for Qwen3-30B, matching or exceeding the offline-optimal Belady's MIN oracle. This effectiveness stems from the high temporal burstiness of MoE routing patterns in autoregressive decoding — recently accessed columns are overwhelmingly likely to be accessed again within the next few tokens.
+COLOSSUS v3 uses standard **Least Recently Used (LRU)** eviction for its column-level cache. Empirical evaluation (E04, E11) demonstrates that LRU achieves a **58.36% hit rate** at cache size 32 for Qwen3-30B, matching or exceeding the offline-optimal Belady's MIN oracle. This effectiveness stems from the high temporal burstiness of MoE routing patterns in autoregressive decoding — recently accessed columns are overwhelmingly likely to be accessed again within the next few tokens.
 
 ---
 
@@ -134,12 +134,12 @@ We simulated sequential decoding tasks on real Qwen3-30B-A3B traces (B=1) to com
 | *(Lossy: drops 7 experts)* | 128 | 27.24% | **2.06 ms** | 73.56 GB |
 | | 256 | 41.17% | **1.68 ms** | 59.48 GB |
 |---|:---:|:---:|:---:|:---:|
-| **AAEC v3 BMESP (LRU)** | 32 | 14.59% | 18.03 ms | 54.72 GB |
+| **COLOSSUS v3 BMESP (LRU)** | 32 | 14.59% | 18.03 ms | 54.72 GB |
 | (Lossless) | 64 | 22.57% | 16.45 ms | 53.89 GB |
 | | 128 | 33.44% | 14.30 ms | 52.94 GB |
 | | 256 | 47.00% | 11.61 ms | 51.97 GB |
 |---|:---:|:---:|:---:|:---:|
-| **AAEC v3 BMESP + Least-Stale**| 32 | **27.39%** | **15.50 ms** | **53.84 GB** |
+| **COLOSSUS v3 BMESP + Least-Stale**| 32 | **27.39%** | **15.50 ms** | **53.84 GB** |
 | (Lossless + SpecMD Eviction)| 64 | **36.88%** | **13.62 ms** | **52.82 GB** |
 | | 128 | **45.93%** | **11.83 ms** | **52.11 GB** |
 | | 256 | **53.39%** | **10.35 ms** | **51.50 GB** |
@@ -194,7 +194,7 @@ With a calibrated 79.75 µs attention compute window, we measure the physical co
 ### Key Systems Insights
 1. **Real Hardware Overlap is Validated:** Under concurrent execution, the total timeline $T_{\text{overlap}}$ is significantly shorter than the sequential sum. For the 13.2 MB payload, sequential copy and compute takes 350.45 µs, while concurrent execution finishes in **242.9 µs**, hiding **107.55 µs** of network transfer latency (39.7% hidden).
 2. **Hiding Strength Scales with Payload Reduction:** Smaller payloads hide substantially better than larger ones. Slicing experts into column packets is the direct enabler of latency hiding; a monolithic expert transfer (9.44 MB per expert, 75.5 MB for Top-8 routing) takes **1.54 ms** over PCIe, exposing a massive **1.46 ms stall** (< 5% hidden).
-3. **Strict Scoping of Systems Claims:** These measurements prove that AAEC's column-granular slicing unlocks measurable hardware-level latency hiding (hiding 40-75% of transfer times for budgeted payloads). However, they also demonstrate that a residual stall remains on PCIe Gen5 (ranging from 30.5 µs to 438.8 µs). Therefore, AAEC achieves **significant stall reduction** rather than absolute zero-stall decoding for PCIe serving.
+3. **Strict Scoping of Systems Claims:** These measurements prove that COLOSSUS's column-granular slicing unlocks measurable hardware-level latency hiding (hiding 40-75% of transfer times for budgeted payloads). However, they also demonstrate that a residual stall remains on PCIe Gen5 (ranging from 30.5 µs to 438.8 µs). Therefore, COLOSSUS achieves **significant stall reduction** rather than absolute zero-stall decoding for PCIe serving.
 
 ---
 
@@ -245,7 +245,7 @@ While 50 prompts seem small at the document level, the statistical strength of t
 To prove that our energy-based priority queue successfully schedules the **most semantically critical columns** first, we evaluate the model's quality under strict column truncation (executing *only* the prefetched high-energy columns, representing the worst-case scenario where fallback on-demand transfers fail):
 
 > [!IMPORTANT]
-> **Strict Lossless Serving Guarantee:** Under standard operation, the AAEC serving engine is **strictly 100% lossless (retaining 100% of the baseline model's representation accuracy and perplexity)**. Any column that is missed during the prefetch phase is dynamically loaded on-demand during the Phase 3 slow-path before execution. 
+> **Strict Lossless Serving Guarantee:** Under standard operation, the COLOSSUS serving engine is **strictly 100% lossless (retaining 100% of the baseline model's representation accuracy and perplexity)**. Any column that is missed during the prefetch phase is dynamically loaded on-demand during the Phase 3 slow-path before execution. 
 > The table below reports the model's quality under a **forced masking stress test** (where on-demand dynamic transfers are disabled) to isolate and validate the representation strength of the prioritized high-energy columns.
 
 | Prefetch Energy Threshold (eta) | Active Columns per Expert | Evaluation Perplexity (PPL) | MMLU Subset Accuracy (100 Qs) | GSM8K Subset Accuracy (30 Qs) | Semantic Representation Loss |

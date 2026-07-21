@@ -1,5 +1,5 @@
 # evaluation/scripts/e19_external_baselines.py
-# Trace-driven simulation comparing AAEC v3 against external baselines:
+# Trace-driven simulation comparing COLOSSUS v3 against external baselines:
 # PowerInfer, MoE-Infinity, FIRM-MoE, MoNE, Expert-LRU, and Demand-Only.
 import os
 import json
@@ -300,7 +300,7 @@ def simulate_system(
                                 cache.popitem(last=False)
                             cache[e] = True
                             
-                elif system_name == "aaec_v3":
+                elif system_name == "colossus_v3":
                     # Column-level dynamic cache + speculative prefetch
                     local_active = {k for k in active_cols_keys if k in cache}
                     missed = active_cols_keys - local_active
@@ -332,7 +332,7 @@ def simulate_system(
                     
                     # Prefetch systems overlap with attention compute too
                     overlap = COMPUTE_TIME_PER_LAYER_US
-                    if system_name in ["moe_infinity", "aaec_v3"]:
+                    if system_name in ["moe_infinity", "colossus_v3"]:
                         overlap += ATTENTION_COMPUTE_TIME_US
                         
                     stall = max(0.0, t_transfer - overlap)
@@ -360,8 +360,8 @@ def simulate_system(
                                 cache.popitem(last=False)
                             cache[pred_exp] = True
                             
-                # AAEC v3 prefetch (Column-level Markov + Static history)
-                elif system_name == "aaec_v3":
+                # COLOSSUS v3 prefetch (Column-level Markov + Static history)
+                elif system_name == "colossus_v3":
                     for l in range(NL + 1):
                         if l == 0:
                             pred_exp = layer_0_most_frequent
@@ -410,7 +410,7 @@ def simulate_system(
         "powerinfer": 240.0,
         "firm_moe": 250.0,
         "mone": 240.0,
-        "aaec_v3": 230.0
+        "colossus_v3": 230.0
     }
     avg_power_watts = power_map.get(system_name, 240.0)
     joules_per_token = avg_power_watts / max(1e-6, throughput)
@@ -425,7 +425,7 @@ def simulate_system(
     }
 
 def main():
-    systems = ["demand_only", "expert_lru", "moe_infinity", "powerinfer", "firm_moe", "mone", "aaec_v3"]
+    systems = ["demand_only", "expert_lru", "moe_infinity", "powerinfer", "firm_moe", "mone", "colossus_v3"]
     
     for model_name, spec in MODELS.items():
         print(f"\n==========================================")
